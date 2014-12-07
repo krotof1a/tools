@@ -7,17 +7,18 @@
 #include <sched.h>
 #include <sstream>
 #include "RCSwitch.h"
+#include <map>
 
 // Pour compiler, récurérer RCSwitch.h et RCSwitch.cpp depuis https://github.com/ninjablocks/433Utils/tree/master/RPi_utils
-// Puis lancer g++ -o radioReception RCSwitch.cpp radioReception.cpp
+// Puis lancer g++ -lwiringPi -o radioReception RCSwitch.cpp radioReception.cpp
 
-// Utilisation: sudo ./radioReception http://[yana_serveur]:[yana_port]/[yana-folder]/action.php
-// Ex: sudo ./radioReception http://localhost/yana-server/action.php
+// Utilisation: sudo ./radioReception http://88.124.222.120:5665/json.htm 2 10 16 2>&1 /dev/zero
 
 using namespace std;
 
 RCSwitch mySwitch;
 int pin;
+map<int, int> outcomes;
 
 void log(string a){
 	//Décommenter pour avoir les logs
@@ -41,7 +42,10 @@ int main (int argc, char** argv)
 	string command = "wget -O - \"";
 	command.append(argv[1]);
 	pin = atoi(argv[2]);
-	string idx = argv[3];
+	for (int i = 3; i < argc; i+=2)
+    	{
+         	outcomes[atoi(argv[i])]=atoi(argv[i+1]);
+    	}
 	log("Demarrage du programme");
 
     	if(wiringPiSetup() == -1)
@@ -76,7 +80,8 @@ int main (int argc, char** argv)
 				log("positif = " + longToString(positive));
 				log("code sonde = " +longToString(emiter));
 				
-				varcmd.append("?type=command&param=udevice&idx="+idx);
+				varcmd.append("?type=command&param=udevice&idx=");
+				varcmd.append(longToString(outcomes[emiter]));
 				//varcmd.append("&capteur="+longToString(emiter));
 				//varcmd.append("&value="+floatToString(temperature));
 				varcmd.append("&nvalue=0");
