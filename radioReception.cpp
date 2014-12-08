@@ -12,7 +12,8 @@
 // Pour compiler, récurérer RCSwitch.h et RCSwitch.cpp depuis https://github.com/ninjablocks/433Utils/tree/master/RPi_utils
 // Puis lancer g++ -lwiringPi -o radioReception RCSwitch.cpp radioReception.cpp
 
-// Utilisation: sudo ./radioReception http://88.124.222.120:5665/json.htm 2 10 16 2>&1 /dev/zero
+// Utilisation: sudo ./radioReception http://[ip]:[port]/json.htm [emiter_pin] [[hw_sensor_code] [domoticz_sens_idx]]
+// Ex: sudo ./radioReception http://localhost:8080/json.htm 2 10 16 2>&1 /dev/zero
 
 using namespace std;
 
