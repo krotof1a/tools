@@ -1,0 +1,5 @@
+#!/bin/sh
+
+eval last=\${$#}
+
+/usr/bin/uvccapture.bin -S80 -B225 -C128 -G80 -x640 -y480 -q100 $last
