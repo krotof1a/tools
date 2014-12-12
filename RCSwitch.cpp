@@ -25,6 +25,10 @@
 */
 
 #include "RCSwitch.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
+using namespace std;
 
 unsigned long RCSwitch::nReceivedValue = NULL;
 unsigned int RCSwitch::nReceivedBitlength = 0;
@@ -435,7 +439,7 @@ void RCSwitch::sendSync() {
 	else if (this->nProtocol == 2) {
 		this->transmit(1,10);
 	}
-	else if (this->nProtocol ==5) {
+	else if (this->nProtocol == 5) {
 		this->transmit(1,2);
 		this->transmit(1,2);
 		this->transmit(1,32);
@@ -567,6 +571,44 @@ bool RCSwitch::receiveProtocol2(unsigned int changeCount){
 
 }
 
+bool RCSwitch::receiveProtocol6(unsigned int changeCount){
+      unsigned long code = 0;
+      unsigned long delayS = 275;
+      unsigned long delaySTolerance = delayS * RCSwitch::nReceiveTolerance * 0.01;    
+      unsigned long delay0 = 240;
+      unsigned long delay0Tolerance = delay0 * RCSwitch::nReceiveTolerance * 0.01;    
+      unsigned long delay1 = 1300;
+      unsigned long delay1Tolerance = delay1 * RCSwitch::nReceiveTolerance * 0.01;    
+
+      for (int i = 5; i<changeCount ; i=i+2) {
+
+          if (RCSwitch::timings[i] > delayS-delaySTolerance && RCSwitch::timings[i] < delayS+delaySTolerance && RCSwitch::timings[i+1] > delay0-delay0Tolerance && RCSwitch::timings[i+1] < delay0+delay0Tolerance) {
+            code = code << 1;
+          } else 
+	  if (RCSwitch::timings[i] > delayS-delaySTolerance && RCSwitch::timings[i] < delayS+delaySTolerance && RCSwitch::timings[i+1] > delay1-delay1Tolerance && RCSwitch::timings[i+1] < delay1+delay1Tolerance) {
+            code = code << 1;
+            code+=1;
+          } else {
+            // Failed
+            i = changeCount;
+            code = 0;
+          }
+      }      
+    if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
+        RCSwitch::nReceivedValue = code;
+        RCSwitch::nReceivedBitlength = (changeCount-5) / 2;
+        RCSwitch::nReceivedDelay = delay0;
+	RCSwitch::nReceivedProtocol = 6;
+    }
+
+	if (code == 0){
+		return false;
+	}else if (code != 0){
+		return true;
+	}
+
+}
+
 void RCSwitch::handleInterrupt() {
 
   static unsigned int duration;
@@ -576,6 +618,14 @@ void RCSwitch::handleInterrupt() {
 
   long time = micros();
   duration = time - lastTime;
+  
+  if (RCSwitch::timings[0] > 5000 && RCSwitch::timings[2] > 2500) {
+	// May be DIO code
+	if (receiveProtocol6(61) == false){
+        	//failed
+        }
+	changeCount=0;
+  }
 
   if (duration > 5000 && duration > RCSwitch::timings[0] - 200 && duration < RCSwitch::timings[0] + 200) {    
     repeatCount++;

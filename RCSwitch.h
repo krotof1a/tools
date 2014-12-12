@@ -104,6 +104,7 @@ class RCSwitch {
     static void handleInterrupt();
 	static bool receiveProtocol1(unsigned int changeCount);
 	static bool receiveProtocol2(unsigned int changeCount);
+	static bool receiveProtocol6(unsigned int changeCount);
     int nReceiverInterrupt;
     int nTransmitterPin;
     int nPulseLength;

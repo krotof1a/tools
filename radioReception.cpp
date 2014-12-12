@@ -40,7 +40,7 @@ string floatToString(float mylong){
 
 int main (int argc, char** argv)
 {
-	string command = "wget -O - \"";
+	string command = "wget -O /dev/zero \"";
 	command.append(argv[1]);
 	pin = atoi(argv[2]);
 	for (int i = 3; i < argc; i+=2)
@@ -64,6 +64,7 @@ int main (int argc, char** argv)
 		string varcmd = "";
     		float temperature = 0;
 		unsigned long emiter = 0;
+		unsigned long receiv = 0;
 		unsigned long positive = 0;
 		
     		if (mySwitch.available()) {
@@ -72,6 +73,31 @@ int main (int argc, char** argv)
            		if (value == 0) {
           			log("Encoding inconnu");
         		} else {    
+			   if (mySwitch.getReceivedProtocol()==6) {
+				//DIO message
+				receiv = mySwitch.getReceivedValue() & 255; //masque sur les 8 derniers bits
+				positive = (mySwitch.getReceivedValue() >> 8) & 3; // decalage de 8 à droite et masque sur les 2 derniers bits
+ 				emiter = mySwitch.getReceivedValue() >> 10; // décalage de 10 digits à droite
+			        log("------------------------------");
+				log("Donnees detectees");
+				log("emetteur = " + longToString(emiter));
+				log("recepteur = " + longToString(receiv));
+				varcmd.append("?type=command&param=switchlight&idx=");
+                                varcmd.append(longToString(outcomes[receiv]));
+				if (positive==1) {
+					log("off");
+					varcmd.append("&switchcmd=Off&level=0");
+				} else {
+					log("on");
+					varcmd.append("&switchcmd=On&level=0");
+				}
+				varcmd.append("\" > /dev/zero 2>&1");
+
+				log("Execution de la commande PHP...");
+				log((command+varcmd).c_str());
+				system((command+varcmd).c_str());
+			   }else{
+				//RCSwitch protocol
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bit
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
@@ -96,6 +122,7 @@ int main (int argc, char** argv)
 				log("Execution de la commande PHP...");
 				log((command+varcmd).c_str());
 				system((command+varcmd).c_str());
+			   }
         		}
 		        mySwitch.resetAvailable();
     
