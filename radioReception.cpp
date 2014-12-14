@@ -8,9 +8,10 @@
 #include <sstream>
 #include "RCSwitch.h"
 #include <map>
+#include <curl/curl.h> 
 
 // Pour compiler, récurérer RCSwitch.h et RCSwitch.cpp depuis https://github.com/ninjablocks/433Utils/tree/master/RPi_utils
-// Puis lancer g++ -lwiringPi -o radioReception RCSwitch.cpp radioReception.cpp
+// Puis lancer g++ -lwiringPi -lcurl -o radioReception RCSwitch.cpp radioReception.cpp
 
 // Utilisation: sudo ./radioReception http://[ip]:[port]/json.htm [emiter_pin] [[hw_sensor_code] [domoticz_sens_idx]]
 // Ex: sudo ./radioReception http://localhost:8080/json.htm 2 10 16 2>&1 /dev/zero
@@ -23,7 +24,7 @@ map<int, int> outcomes;
 
 void log(string a){
 	//Décommenter pour avoir les logs
-	cerr << a << endl;
+	//cerr << a << endl;
 }
 
 string longToString(long mylong){
@@ -38,9 +39,36 @@ string floatToString(float mylong){
     return mystream.str();
 }
 
+// 
+// This is the callback function that is called by 
+// curl_easy_perform(curl) 
+// 
+size_t handle_data(void *ptr, size_t size, size_t nmemb, void *stream){
+	return size*nmemb; 
+}
+
+int openUrl (string urlToOpen) {
+	CURL* curl = curl_easy_init(); 
+    	if(curl) { 
+        	// Tell libcurl the URL 
+        	curl_easy_setopt(curl,CURLOPT_URL, urlToOpen.c_str()); 
+        	// Tell libcurl what function to call when it has data 
+        	curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,handle_data); 
+        	// Do it! 
+        	CURLcode res = curl_easy_perform(curl); 
+        	curl_easy_cleanup(curl); 
+        	if (res != 0) { 
+            		//cerr << "Error: " << res << endl;
+			return -1;
+		} 
+        } 
+    return 0; 
+}
+
 int main (int argc, char** argv)
 {
-	string command = "wget -O /dev/zero \"";
+	//string command = "wget -O /dev/zero \"";
+	string command = "";
 	command.append(argv[1]);
 	pin = atoi(argv[2]);
 	for (int i = 3; i < argc; i+=2)
@@ -91,11 +119,12 @@ int main (int argc, char** argv)
 					log("on");
 					varcmd.append("&switchcmd=On&level=0");
 				}
-				varcmd.append("\" > /dev/zero 2>&1");
+				//varcmd.append("\" > /dev/zero 2>&1");
 
 				log("Execution de la commande PHP...");
 				log((command+varcmd).c_str());
-				system((command+varcmd).c_str());
+				//system((command+varcmd).c_str());
+				openUrl((command+varcmd).c_str());
 			   }else{
 				//RCSwitch protocol
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
@@ -117,20 +146,23 @@ int main (int argc, char** argv)
 				} else {
 					varcmd.append("&svalue=-"+floatToString(temperature));
 				}
-				varcmd.append("\" > /dev/zero 2>&1");
+				//varcmd.append("\" > /dev/zero 2>&1");
 
 				log("Execution de la commande PHP...");
 				log((command+varcmd).c_str());
-				system((command+varcmd).c_str());
+				//system((command+varcmd).c_str());
+				openUrl((command+varcmd).c_str());
 			   }
         		}
 		        mySwitch.resetAvailable();
     
 		}else{
-			log("Aucune donnee...");
+			//log("Aucune donnee...");
 		}
 	
-    	delay(3000);
+    	//delay(10);
+	int tst = usleep(10000);
+	if (tst<0) break;
     }
 }
 

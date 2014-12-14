@@ -625,6 +625,8 @@ void RCSwitch::handleInterrupt() {
         	//failed
         }
 	changeCount=0;
+	RCSwitch::timings[0]=0;
+	RCSwitch::timings[2]=0;
   }
 
   if (duration > 5000 && duration > RCSwitch::timings[0] - 200 && duration < RCSwitch::timings[0] + 200) {    
@@ -651,7 +653,6 @@ void RCSwitch::handleInterrupt() {
   RCSwitch::timings[changeCount++] = duration;
   lastTime = time;  
 }
-
 /**
   * Turns a decimal value to its binary representation
   */
