@@ -1,5 +1,10 @@
 /*
+ Compilation: g++ -lwiringPi -o sendCS RCSwitch.cpp sendCS.cpp
  Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"/portalCode> <pulseDuration>
+ Ex:
+ 	./sendCS 0 12345 portal 1110001110
+ 	./sendCS 0 12345 1 on
+ 	./sendCS 0 12345 2 pulse 50
  */
 
 #include "RCSwitch.h"
