@@ -10,7 +10,6 @@
 #include <map>
 #include <curl/curl.h> 
 
-// Pour compiler, récurérer RCSwitch.h et RCSwitch.cpp depuis https://github.com/ninjablocks/433Utils/tree/master/RPi_utils
 // Puis lancer g++ -lwiringPi -lcurl -o radioReception RCSwitch.cpp radioReception.cpp
 
 // Utilisation: sudo ./radioReception http://[ip]:[port]/json.htm [emiter_pin] [[hw_sensor_code] [domoticz_sens_idx]]
@@ -39,10 +38,6 @@ string floatToString(float mylong){
     return mystream.str();
 }
 
-// 
-// This is the callback function that is called by 
-// curl_easy_perform(curl) 
-// 
 size_t handle_data(void *ptr, size_t size, size_t nmemb, void *stream){
 	return size*nmemb; 
 }
@@ -67,7 +62,6 @@ int openUrl (string urlToOpen) {
 
 int main (int argc, char** argv)
 {
-	//string command = "wget -O /dev/zero \"";
 	string command = "";
 	command.append(argv[1]);
 	pin = atoi(argv[2]);
@@ -107,9 +101,10 @@ int main (int argc, char** argv)
 				positive = (mySwitch.getReceivedValue() >> 8) & 3; // decalage de 8 à droite et masque sur les 2 derniers bits
  				emiter = mySwitch.getReceivedValue() >> 10; // décalage de 10 digits à droite
 			        log("------------------------------");
-				log("Donnees detectees");
+				log("Donnees DIO detectees");
 				log("emetteur = " + longToString(emiter));
 				log("recepteur = " + longToString(receiv));
+				log("positif = " + longToString(positive));
 				varcmd.append("?type=command&param=switchlight&idx=");
                                 varcmd.append(longToString(outcomes[receiv]));
 				if (positive==1) {
@@ -119,50 +114,38 @@ int main (int argc, char** argv)
 					log("on");
 					varcmd.append("&switchcmd=On&level=0");
 				}
-				//varcmd.append("\" > /dev/zero 2>&1");
-
-				log("Execution de la commande PHP...");
-				log((command+varcmd).c_str());
-				//system((command+varcmd).c_str());
-				openUrl((command+varcmd).c_str());
-			   }else{
+			   } else {
 				//RCSwitch protocol
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bit
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
 			        log("------------------------------");
-				log("Donnees detectees");
+				log("Donnees RCSwitch detectees");
 				log("temperature = " + floatToString(temperature));
 				log("positif = " + longToString(positive));
 				log("code sonde = " +longToString(emiter));
 				
 				varcmd.append("?type=command&param=udevice&idx=");
 				varcmd.append(longToString(outcomes[emiter]));
-				//varcmd.append("&capteur="+longToString(emiter));
-				//varcmd.append("&value="+floatToString(temperature));
 				varcmd.append("&nvalue=0");
 				if (positive==1) {
 					varcmd.append("&svalue="+floatToString(temperature));
 				} else {
 					varcmd.append("&svalue=-"+floatToString(temperature));
 				}
-				//varcmd.append("\" > /dev/zero 2>&1");
-
-				log("Execution de la commande PHP...");
-				log((command+varcmd).c_str());
-				//system((command+varcmd).c_str());
-				openUrl((command+varcmd).c_str());
 			   }
+			   log("Execution de l'URL ...");
+			   log((command+varcmd).c_str());
+			   openUrl((command+varcmd).c_str());
         		}
 		        mySwitch.resetAvailable();
     
 		}else{
-			//log("Aucune donnee...");
+			log("Aucune donnee...");
 		}
 	
-    	//delay(10);
-	int tst = usleep(10000);
-	if (tst<0) break;
+	if (usleep(10000) < 0) 
+		break; // Ppogram should exit if sleep cannot be done (in order to avoid full CPU consumption)
     }
 }
 
