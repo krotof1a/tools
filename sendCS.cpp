@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <sched.h>
 #include <sstream>
+#include "RCSwitch.h"
+#include <string.h>
 
 /*
 Script basé sur radioReception.cpp d'Idleman pour la partie DIO.
@@ -198,16 +200,16 @@ int main (int argc, char** argv)
 
     }
 	
-	if (device == -1) {
+	if (interruptor == -1) {
 		log("Lancement en mode RCSwitch ...");
 		RCSwitch mySwitch = RCSwitch();
-    	mySwitch.enableTransmit(pin);
+		mySwitch.enableTransmit(pin);
 		mySwitch.setProtocol(5);
 		mySwitch.setRepeatTransmit(10);
-		mySwitch.send(onoff.c_str());
+		mySwitch.send(const_cast<char*>(onoff.c_str()));
 		if (pulse > 0) {
 			delay(pulse);
-			mySwitch.send(onoff.c_str());
+			mySwitch.send(const_cast<char*>(onoff.c_str()));
 		}
 	} else {
 		log("Lancement en mode DIO ...");

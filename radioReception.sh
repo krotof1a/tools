@@ -7,7 +7,7 @@ do
 		2 \
 		10 16 \
 		85 14
-	sleep 1
+	sleep 5 # Wait in case reception has been killed for emission
 done
 
 return 0;
