@@ -1,25 +1,36 @@
+#include <wiringPi.h>
+#include <iostream>
+#include <stdio.h>
+#include <sys/time.h>
+#include <time.h>
+#include <stdlib.h>
+#include <sched.h>
+#include <sstream>
+
 /*
- Compilation: g++ -fpermissive -lwiringPi -o sendCS RCSwitch.cpp sendCS.cpp
- Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"/portalCode> <pulseDuration>
+Script basé sur radioReception.cpp d'Idleman pour la partie DIO.
+g++ sendCS.cpp RCSwitch.cpp -o sendCS -lwiringPi pour recompiler
+Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"/portalCode> <pulseDuration>
  Ex:
  	./sendCS 0 12345 portal 1110001110
  	./sendCS 0 12345 1 on
  	./sendCS 0 12345 2 pulse 50
- */
-#include "RCSwitch.h"
-#include <wiringPi.h>
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sched.h>
-#include <sstream>
-#include <string.h>
+*/
 
 using namespace std;
 
 int pin;
-bool bit2[26]={};
-bool bit2Interruptor[4]={};
+bool bit2[26]={};              // 26 bit Identifiant emetteur
+bool bit2Interruptor[4]={}; 
+int sender;
+int interruptor;
+string onoff;
+int pulse;
+
+void log(string a){
+	//Décommenter pour avoir les logs
+	//cout << a << endl;
+}
 
 void scheduler_realtime() {
 	struct sched_param p;
@@ -57,37 +68,38 @@ void sendBit(bool b) {
 
 //Calcul le nombre 2^chiffre indiqué, fonction utilisé par itob pour la conversion decimal/binaire
 unsigned long power2(int power){
- unsigned long integer=1;
- for (int i=0; i<power; i++){
+unsigned long integer=1;
+for (int i=0; i<power; i++){
   integer*=2;
- }
- return integer;
 }
+return integer;
+} 
 
 //Convertis un nombre en binaire, nécessite le nombre, et le nombre de bits souhaité en sortie (ici 26)
 // Stocke le résultat dans le tableau global "bit2"
 void itob(unsigned long integer, int length)
 {
-        for (int i=0; i<length; i++){
-          if ((integer / power2(length-1-i))==1){
-                integer-=power2(length-1-i);
-                bit2[i]=1;
-          }
-          else bit2[i]=0;
-        }
-}
-void itobInterruptor(unsigned long integer, int length)
-{
-        for (int i=0; i<length; i++){
-          if ((integer / power2(length-1-i))==1){
-                integer-=power2(length-1-i);
-                bit2Interruptor[i]=1;
-          }
-          else bit2Interruptor[i]=0;
-        }
+	for (int i=0; i<length; i++){
+	  if ((integer / power2(length-1-i))==1){
+		integer-=power2(length-1-i);
+		bit2[i]=1;
+	  }
+	  else bit2[i]=0;
+	}
 }
 
-//Envoie d'une paire de pulsation radio qui definissent 1 bit réel : 0 =01 et 1=10
+void itobInterruptor(unsigned long integer, int length)
+{
+	for (int i=0; i<length; i++){
+	  if ((integer / power2(length-1-i))==1){
+		integer-=power2(length-1-i);
+		bit2Interruptor[i]=1;
+	  }
+	  else bit2Interruptor[i]=0;
+	}
+}
+
+//Envoie d'une paire de pulsation radio qui definissent 1 bit réel : 0 =01 et 1 =10
 //c'est le codage de manchester qui necessite ce petit bouzin, ceci permet entre autres de dissocier les données des parasites
 void sendPair(bool b) {
  if(b)
@@ -133,49 +145,63 @@ void transmit(int blnOn)
 
  // Envoie des 4 derniers bits, qui représentent le code interrupteur, ici 0 (encode sur 4 bit donc 0000)
  // nb: sur  les télécommandes officielle chacon, les interrupteurs sont logiquement nommés de 0 à x
- // interrupteur 1 = 0 (donc 0000) , interrupteur 2 = 1 (1000) , interrupteur 3= 2 (0100) etc...
+ // interrupteur 1 = 0 (donc 0000) , interrupteur 2 = 1 (1000) , interrupteur 3 = 2 (0100) etc...
  for(i=0; i<4;i++)
  {
-   if(bit2Interruptor[i]==0){
-        sendPair(false);
-   }else{
-        sendPair(true);
-   }
+	if(bit2Interruptor[i]==0){
+		sendPair(false);
+  }else{
+	sendPair(true);
+  }
  }
-
+ 
  digitalWrite(pin, HIGH);   // coupure données, verrou
  delayMicroseconds(275);      // attendre 275µs
- digitalWrite(pin, LOW);    // verrou 2 de 2675µs pour signaler la fermeture dusignal
+ digitalWrite(pin, LOW);    // verrou 2 de 2675µs pour signaler la fermeture du signal
 
 }
 
 void action (bool b) {
-        for(int i=0;i<5;i++){
-                transmit(b);              // envoyer
-                delay(10);                // attendre 10 ms (sinon le socket nous ignore)
-        }
+	if (b) {
+		log("envois du signal ON");
+	} else {
+        log("envois du signal OFF");
+	}
+	for(int i=0;i<5;i++){
+		transmit(b);              // envoyer
+		delay(10);                // attendre 10 ms (sinon le socket nous ignore)
+	}
 }
 
-int main(int argc, char *argv[]) {
-    
-    	pin = atoi(argv[1]);
-    	int sender = atoi(argv[2]);
-    	int device = 9999;
-    	if (strcmp(argv[3],"portal")==0) 
-    		device=-1;
-    	else
-    		device = atoi(argv[3]);
-    	string onoff = argv[4];
-    	int pulse = 0;
-    	if (argc == 6) pulse = atoi(argv[5]);
-	if (wiringPiSetup () == -1) return 1;
-    	
-    	scheduler_realtime();
-    	
-    	RCSwitch mySwitch = RCSwitch();
-    	mySwitch.enableTransmit(pin);
+int main (int argc, char** argv)
+{
+	if (setuid(0))
+	{
+		perror("setuid");
+		return 1;
+	}
+
+	scheduler_realtime();
+
+	log("Demarrage du programme");
+	pin = atoi(argv[1]);
+	sender = atoi(argv[2]);
+	interruptor = (strcmp(argv[3],"portal")==0)?-1:atoi(argv[3]);
+	onoff = argv[4];
+	pulse =(argc==6)? atoi(argv[5]) : 0;
+
+	//Si on ne trouve pas la librairie wiringPI, on arrête l'execution
+    if(wiringPiSetup() == -1)
+    {
+        log("Librairie Wiring PI introuvable, veuillez lier cette librairie...");
+        return -1;
+
+    }
+	
 	if (device == -1) {
-		// Portal command
+		log("Lancement en mode RCSwitch ...");
+		RCSwitch mySwitch = RCSwitch();
+    	mySwitch.enableTransmit(pin);
 		mySwitch.setProtocol(5);
 		mySwitch.setRepeatTransmit(10);
 		mySwitch.send(onoff.c_str());
@@ -184,21 +210,22 @@ int main(int argc, char *argv[]) {
 			mySwitch.send(onoff.c_str());
 		}
 	} else {
-		// DIO command
+		log("Lancement en mode DIO ...");
+		pinMode(pin, OUTPUT);
+		log("Pin GPIO configure en sortie");
 		itob(sender,26);
-        	itobInterruptor(device,4);
-		if (strcmp(onoff.c_str(),"on")==0 || strcmp(onoff.c_str(),"pulse")==0) {
+		itobInterruptor(interruptor,4);
+		if(onoff=="on"){
 			action(true);
-		}
-		if (strcmp(onoff.c_str(),"pulse")==0 && pulse > 0) {
+		} else if (onoff=="off"){
+			action(false);	 
+		} else {
+			action(true);
 			delay(pulse);
-		}
-		if (strcmp(onoff.c_str(),"off")==0 || strcmp(onoff.c_str(),"pulse")==0) {
 			action(false);
 		}
 	}
-	
-	scheduler_standard();
+	log("Fin du programme");    // execution terminée.
 
-	return 0;
+	scheduler_standard();
 }
