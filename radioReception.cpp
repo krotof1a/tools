@@ -83,10 +83,11 @@ int main (int argc, char** argv)
     	log("Attente d'un signal du transmetteur ...");
 	for(;;)
     	{
-		string varcmd = "";
+		string varcmd = "?type=command&param=udevice&idx=";
     		float temperature = 0;
 		unsigned long emiter = 0;
 		unsigned long receiv = 0;
+		unsigned long commId = 0;
 		unsigned long positive = 0;
 		
     		if (mySwitch.available()) {
@@ -100,21 +101,20 @@ int main (int argc, char** argv)
 				receiv = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 				positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bits
  				emiter = mySwitch.getReceivedValue() >> 6; // décalage de 6 digits à droite
+ 				commId = (emiter << 4) & receiv; // id construit par concat emiter + receiv
 			        log("------------------------------");
 				log("Donnees DIO detectees");
-				log("emetteur = " + longToString(emiter));
+				log("emetteur  = " + longToString(emiter));
 				log("recepteur = " + longToString(receiv));
-				log("positif = " + longToString(positive));
-				varcmd.append("?type=command&param=udevice&idx=");
+				log("on/off    = " + longToString(positive));
+				log("id        = " + longToString(commId));
                                 varcmd.append(longToString(outcomes[receiv]));
 				if (positive==0) {
-					log("off");
 					varcmd.append("&nvalue=0");
 				} else if (positive==1) {
-					log("on");
 					varcmd.append("&nvalue=1");
 				} else {
-					log("incorrect reception");
+					log("Reception incorrecte");
 				        mySwitch.resetAvailable();
 					continue;
 				}	
@@ -125,11 +125,10 @@ int main (int argc, char** argv)
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
 			        log("------------------------------");
 				log("Donnees RCSwitch detectees");
+				log("code sonde  = " +longToString(emiter));
+				log("positif     = " + longToString(positive));
 				log("temperature = " + floatToString(temperature));
-				log("positif = " + longToString(positive));
-				log("code sonde = " +longToString(emiter));
 				
-				varcmd.append("?type=command&param=udevice&idx=");
 				varcmd.append(longToString(outcomes[emiter]));
 				varcmd.append("&nvalue=0");
 				if (positive==1) {
