@@ -48,8 +48,7 @@ typedef uint8_t byte;
 
 // Number of maximum High/Low changes per packet.
 // We can handle up to (unsigned long) => 32 bit * 2 H/L changes per bit + 2 for sync
-#define RCSWITCH_MAX_CHANGES 67
-#define DIO_MAX_CHANGES 140
+#define RCSWITCH_MAX_CHANGES 135 //67
 
 class RCSwitch {
 
@@ -117,7 +116,6 @@ class RCSwitch {
 	static unsigned int nReceivedDelay;
 	static unsigned int nReceivedProtocol;
     static unsigned int timings[RCSWITCH_MAX_CHANGES];
-    static unsigned int timingsD[DIO_MAX_CHANGES];
     
 };
 
