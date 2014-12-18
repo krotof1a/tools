@@ -101,14 +101,14 @@ int main (int argc, char** argv)
 				receiv = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 				positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bits
  				emiter = mySwitch.getReceivedValue() >> 6; // décalage de 6 digits à droite
- 				commId = (emiter << 4) & receiv; // id construit par concat emiter + receiv
+ 				commId = (emiter << 4) + receiv; // id construit par concat emiter + receiv
 			        log("------------------------------");
 				log("Donnees DIO detectees");
 				log("emetteur  = " + longToString(emiter));
 				log("recepteur = " + longToString(receiv));
 				log("on/off    = " + longToString(positive));
 				log("id        = " + longToString(commId));
-                                varcmd.append(longToString(outcomes[receiv]));
+                                varcmd.append(longToString(outcomes[commId]));
 				if (positive==0) {
 					varcmd.append("&nvalue=0");
 				} else if (positive==1) {
