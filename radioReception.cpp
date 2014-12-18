@@ -23,7 +23,7 @@ map<int, int> outcomes;
 
 void log(string a){
 	//Décommenter pour avoir les logs
-	//cerr << a << endl;
+	cerr << a << endl;
 }
 
 string longToString(long mylong){
@@ -97,23 +97,27 @@ int main (int argc, char** argv)
         		} else {    
 			   if (mySwitch.getReceivedProtocol()==6) {
 				//DIO message
-				receiv = mySwitch.getReceivedValue() & 255; //masque sur les 8 derniers bits
-				positive = (mySwitch.getReceivedValue() >> 8) & 3; // decalage de 8 à droite et masque sur les 2 derniers bits
- 				emiter = mySwitch.getReceivedValue() >> 10; // décalage de 10 digits à droite
+				receiv = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
+				positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bits
+ 				emiter = mySwitch.getReceivedValue() >> 6; // décalage de 6 digits à droite
 			        log("------------------------------");
 				log("Donnees DIO detectees");
 				log("emetteur = " + longToString(emiter));
 				log("recepteur = " + longToString(receiv));
 				log("positif = " + longToString(positive));
-				varcmd.append("?type=command&param=switchlight&idx=");
+				varcmd.append("?type=command&param=udevice&idx=");
                                 varcmd.append(longToString(outcomes[receiv]));
-				if (positive==1) {
+				if (positive==0) {
 					log("off");
-					varcmd.append("&switchcmd=Off&level=0");
-				} else {
+					varcmd.append("&nvalue=0");
+				} else if (positive==1) {
 					log("on");
-					varcmd.append("&switchcmd=On&level=0");
-				}
+					varcmd.append("&nvalue=1");
+				} else {
+					log("incorrect reception");
+				        mySwitch.resetAvailable();
+					continue;
+				}	
 			   } else {
 				//RCSwitch protocol
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
@@ -141,10 +145,10 @@ int main (int argc, char** argv)
 		        mySwitch.resetAvailable();
     
 		}else{
-			log("Aucune donnee...");
+			//log("Aucune donnee...");
 		}
 	
-	if (usleep(10000) < 0) 
+	if (usleep(100000) < 0) 
 		break; // Ppogram should exit if sleep cannot be done (in order to avoid full CPU consumption)
     }
 }

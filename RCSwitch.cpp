@@ -573,39 +573,80 @@ bool RCSwitch::receiveProtocol2(unsigned int changeCount){
 
 bool RCSwitch::receiveProtocol6(unsigned int changeCount){
       unsigned long code = 0;
-      unsigned long delayS = 275;
-      unsigned long delaySTolerance = delayS * RCSwitch::nReceiveTolerance * 0.01;    
       unsigned long delay0 = 240;
       unsigned long delay0Tolerance = delay0 * RCSwitch::nReceiveTolerance * 0.01;    
       unsigned long delay1 = 1300;
       unsigned long delay1Tolerance = delay1 * RCSwitch::nReceiveTolerance * 0.01;    
+      int prevBit = 0;
+      int bit = 0;
+ 
+      int j=0;
 
-      for (int i = 5; i<changeCount ; i=i+2) {
+for (int i = 0; i<changeCount ; i++) {
+cerr << RCSwitch::timings[i]<<",";
+}
+cerr <<endl;
 
-          if (RCSwitch::timings[i] > delayS-delaySTolerance && RCSwitch::timings[i] < delayS+delaySTolerance && RCSwitch::timings[i+1] > delay0-delay0Tolerance && RCSwitch::timings[i+1] < delay0+delay0Tolerance) {
-            code = code << 1;
-          } else 
-	  if (RCSwitch::timings[i] > delayS-delaySTolerance && RCSwitch::timings[i] < delayS+delaySTolerance && RCSwitch::timings[i+1] > delay1-delay1Tolerance && RCSwitch::timings[i+1] < delay1+delay1Tolerance) {
-            code = code << 1;
-            code+=1;
-          } else {
-            // Failed
-            i = changeCount;
-            code = 0;
-          }
-      }      
-    if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
+      for (int i = 13; i<changeCount ; i=i+2) {
+	//Définition du bit (0 ou 1)
+	if(RCSwitch::timings[i] > (delay0 - delay0Tolerance) && 
+	   RCSwitch::timings[i] < (delay0 + delay0Tolerance)){
+		bit = 0;
+	} else if(RCSwitch::timings[i] > (delay1 - delay1Tolerance) &&
+           RCSwitch::timings[i] < (delay1 + delay1Tolerance)){
+		bit = 1;
+	} else {
+	   return false;
+	}
+
+	if(j % 2 == 1) {
+		if((prevBit ^ bit) == 0)
+				{
+					// doit être 01 ou 10,,pas 00 ou 11 sinon ou coupe la detection, c'est un parasite
+					return false;
+				}
+
+				if(j < 12)
+				{
+					// les 26 premiers (0-25) bits sont l'identifiants de la télécommande
+					code <<= 1;
+					code |= prevBit;
+				}      
+				else if(j == 13)
+				{
+					// le 26em bit est le bit de groupe
+					code <<= 1;
+					code |= prevBit;
+				}
+				else if(j == 15)
+				{
+					// le 27em bit est le bit d'etat (on/off)
+					code <<= 1;
+					code |= prevBit;
+				}
+			
+				else
+				{
+					// les 4 derniers bits (28-32) sont l'identifiant de la rangée de bouton
+					code <<= 1;
+					code |= prevBit;
+				}
+			}
+	prevBit = bit;
+	j++;
+      }  
+      if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
         RCSwitch::nReceivedValue = code;
-        RCSwitch::nReceivedBitlength = (changeCount-5) / 2;
+        RCSwitch::nReceivedBitlength = (changeCount-5) / 4;
         RCSwitch::nReceivedDelay = delay0;
 	RCSwitch::nReceivedProtocol = 6;
-    }
+      }
 
-	if (code == 0){
+      if (code == 0){
 		return false;
-	}else if (code != 0){
+      }else if (code != 0){
 		return true;
-	}
+      }
 
 }
 
