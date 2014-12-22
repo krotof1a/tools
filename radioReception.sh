@@ -3,7 +3,7 @@
 while [ true ]
 do
 	/home/pi/tools/radioReception \
-		http://88.124.222.120:5665/json.htm \
+		http://localhost:5665/json.htm \
 		2 \
 		10 16 \
 		736 14 \

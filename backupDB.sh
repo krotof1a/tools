@@ -1,5 +1,5 @@
 #!/bin/sh
 
-wget -O /media/sda1/backups/domoticz.db "http://88.124.222.120:5665/backupdatabase.php"
+wget -O /media/sda1/backups/domoticz.db "http://localhost:5665/backupdatabase.php" > /dev/zero 2>&1
 chmod 666 /media/sda1/backups/domoticz.db
 
