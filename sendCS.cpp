@@ -12,11 +12,12 @@
 /*
 Script basé sur radioReception.cpp d'Idleman pour la partie DIO.
 g++ sendCS.cpp RCSwitch.cpp -o sendCS -lwiringPi pour recompiler
-Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"/portalCode> <pulseDuration>
+Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"/"casto"> <"on"/"off"/"pulse"/portalCode/castoCode> <pulseDuration>
  Ex:
  	./sendCS 0 12345 portal 1110001110
  	./sendCS 0 12345 1 on
  	./sendCS 0 12345 2 pulse 50
+	./sendCS 0 12345 casto 1381719
 */
 
 using namespace std;
@@ -188,7 +189,12 @@ int main (int argc, char** argv)
 	log("Demarrage du programme");
 	pin = atoi(argv[1]);
 	sender = atoi(argv[2]);
-	interruptor = (strcmp(argv[3],"portal")==0)?-1:atoi(argv[3]);
+	if (strcmp(argv[3],"portal")==0)
+		interruptor = -1;
+	else if (strcmp(argv[3],"casto")==0)
+		interruptor = -2;
+	else 
+		interruptor = atoi(argv[3]);
 	onoff = argv[4];
 	pulse =(argc==6)? atoi(argv[5]) : 0;
 
@@ -211,6 +217,13 @@ int main (int argc, char** argv)
 			delay(pulse);
 			mySwitch.send(const_cast<char*>(onoff.c_str()));
 		}
+	} else if (interruptor == -2) {
+		log("Lancement en mode Casto ...");
+                RCSwitch mySwitch = RCSwitch();
+                mySwitch.enableTransmit(pin);
+                mySwitch.setProtocol(1);
+                mySwitch.setRepeatTransmit(5);
+                mySwitch.send(atoi(const_cast<char*>(onoff.c_str())),24);
 	} else {
 		log("Lancement en mode DIO ...");
 		pinMode(pin, OUTPUT);
