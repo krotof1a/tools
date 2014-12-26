@@ -222,7 +222,7 @@ int main (int argc, char** argv)
                 RCSwitch mySwitch = RCSwitch();
                 mySwitch.enableTransmit(pin);
                 mySwitch.setProtocol(1);
-                mySwitch.setRepeatTransmit(5);
+                mySwitch.setRepeatTransmit(10);
                 mySwitch.send(atoi(const_cast<char*>(onoff.c_str())),24);
 	} else {
 		log("Lancement en mode DIO ...");
