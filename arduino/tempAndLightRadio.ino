@@ -1,7 +1,7 @@
 /*
  * Code pour construction d'une sonde de temperature "maison", récupère une temperature et l'envois sur la fréquence de 433 mhz
  * Fréquence : 433.92 mhz
- * Protocole : RCSwitch
+ * Protocole : HRCSwitch
  * Licence : CC -by -sa
  * Matériel associé : Atmega 328 (+résonateur associé) + emetteur RF AM 433.92 mhz + capteur DS18B20 + led d'etat + résistance 4.7 kohms
  * Auteur : C.Safra basé sur le travail d'Idleman et la lib RCSwitch
@@ -9,7 +9,7 @@
  
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <RCSwitch.h>
+#include <HRCSwitch.h>
 
 //La sonde de température DS18B20 est branchée au pin 7 de l'atmega
 #define TEMPERATURE_PIN 7
@@ -27,7 +27,7 @@ char sonde[4]={'1','0','1','0'}; // Code 10 ici
 //Tableaud de stockage du signal binaire à  envoyer
 char bit2[17]={};              
  
-RCSwitch mySwitch = RCSwitch();
+HRCSwitch mySwitch = HRCSwitch();
 
 // On crée une instance de la classe oneWire pour communiquer avec le materiel on wire (dont le capteur ds18b20)
 OneWire oneWire(TEMPERATURE_PIN);
