@@ -1,9 +1,9 @@
 /*
- * Code pour construction d'une sonde de temperature "maison", récupère une temperature et l'envois sur la fréquence de 433 mhz
- * Fréquence : 433.92 mhz
- * Protocole : HRCSwitch
+ * Code pour construction d'une sonde de temperature "maison", 
+ * récupère une temperature et une luminosité et l'envoit sur la fréquence de 433 mhz
+ * Protocole : HRCSwitch (https://github.com/maditnerd/HRCSwitch)
  * Licence : CC -by -sa
- * Matériel associé : Atmega 328 (+résonateur associé) + emetteur RF AM 433.92 mhz + capteur DS18B20 + led d'etat + résistance 4.7 kohms
+ * Matériel associé : Atmega 328 (+résonateur associé) + emetteur RF AM 433.92 mhz + capteur DS18B20 + led d'etat + résistance 4.7 kohms + LDR
  * Auteur : C.Safra basé sur le travail d'Idleman et la lib RCSwitch
  */
  
@@ -21,8 +21,14 @@
 #define TRANSMITTER_VCC 10
 #define TRANSMITTER_GND 9
 
+//La LDR est connectée en A0
+#define LDR_PIN 0
+#define LIGHT_LEVEL 500
+int LDRPreviousState = 0;
+
 //Tableaud de stockage du numero de la sonde
-char sonde[4]={'1','0','1','0'}; // Code 10 ici 
+char sonde[4]={'0','1','0','1'}; // Code 5 ici
+int  sondeI=5;
 
 //Tableaud de stockage du signal binaire à  envoyer
 char bit2[17]={};              
@@ -33,6 +39,12 @@ HRCSwitch mySwitch = HRCSwitch();
 OneWire oneWire(TEMPERATURE_PIN);
 //On passe la reference onewire à  la classe DallasTemperature qui vas nous permettre de relever la temperature simplement
 DallasTemperature sensors(&oneWire);
+
+// Ne pas utiliser de delay() pour ne pas rompre la reactivité de l'Arduino
+unsigned long TimerALimit = 30000UL; // Attente de 30s
+unsigned long TimerA = 0;
+unsigned long TimerBLimit = 50UL;    // Attente de 0.050s
+unsigned long TimerB = 0;
 
 //Fonction lancée à  l'initialisation du programme
 void setup(void)
@@ -58,19 +70,39 @@ void setup(void)
 
 //Fonction qui boucle à  l'infinis
 void loop(void)
-{ 
-
-  //Lancement de la commande de récuperation de la temperature
-  sensors.requestTemperatures();
-  unsigned long readTemp = 100*sensors.getTempCByIndex(0);  
-  //Affichage de la temparature dans les logs
-  Serial.println(readTemp);  
-  //Conversion de la temperature en binaire et stockage sur 12 bits dans le tableau bit2
-  itob(readTemp,12); 
-  //Envois du signal radio comprenant la temperature (on l'envois 5 fois parce qu'on est pas des trompettes :p, et on veux être sur que ça recoit bien)
-  mySwitch.send(bit2);
-  //delais de 30sc avant le prochain envois
-  delay(30000);
+{
+ // Partie gestion de temperature
+ if (millis()-TimerA >= TimerALimit) {
+   //Lancement de la commande de récuperation de la temperature
+   sensors.requestTemperatures();
+   unsigned long readTemp = 100*sensors.getTempCByIndex(0);  
+   //Affichage de la temparature dans les logs
+   Serial.println(readTemp);  
+   //Conversion de la temperature en binaire et stockage sur 12 bits dans le tableau bit2
+   itob(readTemp,12); 
+   //Envois du signal radio comprenant la temperature (on l'envois 5 fois parce qu'on est pas des trompettes :p, et on veux être sur que ça recoit bien)
+   mySwitch.send(bit2);
+   //Reinit Timer
+   TimerA=millis();
+ }
+ 
+ // Partie gestion de luminosite
+ if (millis()-TimerB >= TimerBLimit) {
+  int LDRValue = analogRead(LDR_PIN);
+  int LDRState = 0;
+  if (LDRValue < LIGHT_LEVEL) {
+   //Lumiere detectee
+   LDRState = 1;
+  }
+  if (LDRPreviousState!=LDRState) {
+   //Changement d etat a notifier
+   Serial.println("Light state change"); 
+   LDRPreviousState=LDRState;
+   mySwitch.send(sondeI,sondeI,(LDRState==0)?false:true);
+  }
+  //Reinit Timer
+   TimerB=millis();
+ }
 }
  
 //fonction de conversion d'un nombre entier "integer" en binaire sur "length" bits et stockage dans le tableau bit2 + stockage signe + stockage code emetteur
