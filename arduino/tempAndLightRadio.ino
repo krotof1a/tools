@@ -27,8 +27,9 @@
 int LDRPreviousState = 0;
 
 //Tableaud de stockage du numero de la sonde
-char sonde[4]={'0','1','0','1'}; // Code 5 ici
-int  sondeI=5;
+char sondeT[4]={'0','1','0','1'}; // Code 5 ici
+char sondeL[4]={'0','1','1','0'}; // Code 6 ici
+char* sonde;
 
 //Tableaud de stockage du signal binaire à  envoyer
 char bit2[17]={};              
@@ -79,6 +80,7 @@ void loop(void)
    //Affichage de la temparature dans les logs
    Serial.println(readTemp);  
    //Conversion de la temperature en binaire et stockage sur 12 bits dans le tableau bit2
+   sonde=sondeT;
    itob(readTemp,12); 
    //Envois du signal radio comprenant la temperature (on l'envois 5 fois parce qu'on est pas des trompettes :p, et on veux être sur que ça recoit bien)
    mySwitch.setProtocol(1);
@@ -99,6 +101,7 @@ void loop(void)
    //Changement d etat a notifier
    Serial.println("Light state change"); 
    LDRPreviousState=LDRState;
+   sonde=sondeL;
    if (LDRState==0) {
      itob(100,12);
    } else {
