@@ -9,7 +9,7 @@
  
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <HRCSwitch.h>
+#include <RCSwitch.h>
 
 //La sonde de température DS18B20 est branchée au pin 7 de l'atmega
 #define TEMPERATURE_PIN 7
@@ -33,7 +33,7 @@ int  sondeI=5;
 //Tableaud de stockage du signal binaire à  envoyer
 char bit2[17]={};              
  
-HRCSwitch mySwitch = HRCSwitch();
+RCSwitch mySwitch = RCSwitch();
 
 // On crée une instance de la classe oneWire pour communiquer avec le materiel on wire (dont le capteur ds18b20)
 OneWire oneWire(TEMPERATURE_PIN);
@@ -81,6 +81,7 @@ void loop(void)
    //Conversion de la temperature en binaire et stockage sur 12 bits dans le tableau bit2
    itob(readTemp,12); 
    //Envois du signal radio comprenant la temperature (on l'envois 5 fois parce qu'on est pas des trompettes :p, et on veux être sur que ça recoit bien)
+   mySwitch.setProtocol(1);
    mySwitch.send(bit2);
    //Reinit Timer
    TimerA=millis();
@@ -98,7 +99,13 @@ void loop(void)
    //Changement d etat a notifier
    Serial.println("Light state change"); 
    LDRPreviousState=LDRState;
-   mySwitch.send(sondeI,sondeI,(LDRState==0)?false:true);
+   if (LDRState==0) {
+     itob(100,12);
+   } else {
+     itob(0,12);
+   }
+   mySwitch.setProtocol(2);
+   mySwitch.send(bit2);
   }
   //Reinit Timer
    TimerB=millis();
