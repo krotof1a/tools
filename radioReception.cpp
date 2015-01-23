@@ -118,7 +118,7 @@ int main (int argc, char** argv)
 				        mySwitch.resetAvailable();
 					continue;
 				}	
-			   } else {
+			   } else if (mySwitch.getReceivedProtocol()==1) {
 				//RCSwitch protocol
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bit
@@ -136,6 +136,25 @@ int main (int argc, char** argv)
 				} else {
 					varcmd.append("&svalue=-"+floatToString(temperature));
 				}
+			   } else {
+				//RCSwitch protocol
+			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
+			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
+			        log("------------------------------");
+				log("Donnees RCSwitch detectees");
+				log("code sonde  = " +longToString(emiter));
+				log("on/off = " + floatToString(temperature));
+				
+				varcmd.append(longToString(outcomes[emiter]));
+				if (temperature==0) {
+					varcmd.append("&nvalue=0");
+				} else if (temperature==1) {
+					varcmd.append("&nvalue=1");
+				} else {
+					log("Reception incorrecte");
+				        mySwitch.resetAvailable();
+					continue;
+				}	
 			   }
 			   log("Execution de l'URL ...");
 			   log((command+varcmd).c_str());
