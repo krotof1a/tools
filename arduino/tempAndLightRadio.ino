@@ -119,13 +119,13 @@ void loop(void)
 void itob(unsigned long integer, int length)
 {  
   int positive;
-  if(integer>0){
+  if(integer<0){
+   positive = false;
+   Serial.println("negatif ");
+  }else{
    positive = true;
    Serial.println("positif ");
- }else{
-  positive = false;
-   Serial.println("negatif ");
- }
+  }
   //needs bit2[length]
   // Convert long device code into binary (stores in global bit2 array.)
  for (int i=0; i<length; i++){
