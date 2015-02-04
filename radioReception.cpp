@@ -97,7 +97,7 @@ int main (int argc, char** argv)
           			log("Encoding inconnu");
         		} else {    
 			   if (mySwitch.getReceivedProtocol()==6) {
-				//DIO message
+				//DIO message (pour telecommande ou detecteur d'ouverture)
 				receiv = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 				positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bits
  				emiter = mySwitch.getReceivedValue() >> 6; // décalage de 6 digits à droite
@@ -119,7 +119,7 @@ int main (int argc, char** argv)
 					continue;
 				}	
 			   } else if (mySwitch.getReceivedProtocol()==1) {
-				//RCSwitch protocol
+				//RCSwitch protocol 1 : transmet une temperature
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bit
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
@@ -137,7 +137,7 @@ int main (int argc, char** argv)
 					varcmd.append("&svalue=-"+floatToString(temperature));
 				}
 			   } else {
-				//RCSwitch protocol
+				//RCSwitch protocol 2 : change un switch (sans lancer d'action) pour retour d'etat
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
 			        log("------------------------------");
@@ -147,9 +147,9 @@ int main (int argc, char** argv)
 				
 				varcmd.append(longToString(outcomes[emiter]));
 				if (temperature==0) {
-					varcmd.append("&nvalue=0");
+					varcmd.append("&nvalue=0&svalue=0");
 				} else if (temperature==1) {
-					varcmd.append("&nvalue=1");
+					varcmd.append("&nvalue=1&svalue=1");
 				} else {
 					log("Reception incorrecte");
 				        mySwitch.resetAvailable();
