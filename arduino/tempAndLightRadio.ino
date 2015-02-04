@@ -1,7 +1,7 @@
 /*
  * Code pour construction d'une sonde de temperature "maison", 
  * récupère une temperature et une luminosité et l'envoit sur la fréquence de 433 mhz
- * Protocole : HRCSwitch (https://github.com/maditnerd/HRCSwitch)
+ * Protocole : RCSwitch
  * Licence : CC -by -sa
  * Matériel associé : Atmega 328 (+résonateur associé) + emetteur RF AM 433.92 mhz + capteur DS18B20 + led d'etat + résistance 4.7 kohms + LDR
  * Auteur : C.Safra basé sur le travail d'Idleman et la lib RCSwitch
@@ -99,7 +99,7 @@ void loop(void)
   }
   if (LDRPreviousState!=LDRState) {
    //Changement d etat a notifier
-   Serial.println("Light state change"); 
+   //Serial.println("Light state change"); 
    LDRPreviousState=LDRState;
    sonde=sondeL;
    if (LDRState==0) {
