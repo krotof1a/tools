@@ -2,7 +2,7 @@
 
 while [ true ]
 do
-	/home/pi/tools/radioReception \
+	/home/osmc/tools/radioReception \
 		http://localhost:5665/json.htm \
 		2 \
 		10 16 \

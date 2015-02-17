@@ -1,9 +1,9 @@
 #!/bin/sh
 
-/home/pi/tools/speakCS.sh "Attention! Intrusion en cours!"
+/home/osmc/tools/speakCS.sh "Attention! Intrusion en cours!"
 while [ true ]
 do
-  aplay /home/pi/tools/siren.wav > /dev/zero 2>&1
+  aplay /home/osmc/tools/siren.wav > /dev/zero 2>&1
   if [ $? -ne 0 ]
   then
 	break

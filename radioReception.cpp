@@ -9,6 +9,7 @@
 #include "RCSwitch.h"
 #include <map>
 #include <curl/curl.h> 
+#include <unistd.h>
 
 // Puis lancer g++ -lwiringPi -lcurl -o radioReception RCSwitch.cpp radioReception.cpp
 

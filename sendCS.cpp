@@ -8,6 +8,7 @@
 #include <sstream>
 #include "RCSwitch.h"
 #include <string.h>
+#include <unistd.h>
 
 /*
 Script basé sur radioReception.cpp d'Idleman pour la partie DIO.
