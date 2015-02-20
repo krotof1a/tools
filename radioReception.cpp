@@ -48,7 +48,7 @@ size_t handle_data(void *ptr, size_t size, size_t nmemb, void *stream){
 int openUrl (string urlToOpen) {
 	CURL* curl = curl_easy_init(); 
 	struct timeval currentSend;
-	if(urlToOpen.compare(lastUrl) = =0 &&
+	if(urlToOpen.compare(lastUrl) == 0 &&
 	   currentSend.tv_sec - lastSent.tv_sec < 3) {
 		// Avoid to resend the same Url within 3 seconds
 		return -1;
