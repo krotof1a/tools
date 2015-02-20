@@ -21,6 +21,8 @@ using namespace std;
 RCSwitch mySwitch;
 int pin;
 map<int, int> outcomes;
+struct timeval lastSent;
+string lastUrl;
 
 void log(string a){
 	//Décommenter pour avoir les logs
@@ -45,6 +47,12 @@ size_t handle_data(void *ptr, size_t size, size_t nmemb, void *stream){
 
 int openUrl (string urlToOpen) {
 	CURL* curl = curl_easy_init(); 
+	struct timeval currentSend;
+	if(urlToOpen.compare(lastUrl) = =0 &&
+	   currentSend.tv_sec - lastSent.tv_sec < 3) {
+		// Avoid to resend the same Url within 3 seconds
+		return -1;
+	}
     	if(curl) { 
         	// Tell libcurl the URL 
         	curl_easy_setopt(curl,CURLOPT_URL, urlToOpen.c_str()); 
@@ -56,7 +64,10 @@ int openUrl (string urlToOpen) {
         	if (res != 0) { 
             		//cerr << "Error: " << res << endl;
 			return -1;
-		} 
+		} else {
+			gettimeofday(&lastSent, NULL);
+			lastUrl = urlToOpen;
+		}
         } 
     return 0; 
 }
@@ -64,6 +75,7 @@ int openUrl (string urlToOpen) {
 int main (int argc, char** argv)
 {
 	string command = "";
+	gettimeofday(&lastSent, NULL);
 	command.append(argv[1]);
 	pin = atoi(argv[2]);
 	for (int i = 3; i < argc; i+=2)
