@@ -172,7 +172,7 @@ void action (bool b) {
  	} else {
         log("envois du signal OFF");
 	}
-	for(int i=0;i<5;i++){
+	for(int i=0;i<10;i++){
 		transmit(b);              // envoyer
 		delay(10);                // attendre 10 ms (sinon le socket nous ignore)
 	}
