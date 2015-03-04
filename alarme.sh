@@ -23,7 +23,7 @@ else if [ "$1" = "finish" ]
 then
 	echo "Disarming alarm ..."
 	wget -o /dev/zero -O /dev/zero "http://localhost:5665/json.htm?type=command&param=setsecstatus&secstatus=0&seccode=$2"
-	sudo killall aplay alarme.sh
+	/home/osmc/tools/alarme.sh stop
 fi
 fi
 fi
