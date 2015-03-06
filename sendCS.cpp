@@ -53,28 +53,21 @@ void scheduler_standard() {
 	}
 }
 
-void myDelayMicroseconds(int howLong) {
-	for ( int i = 0 ; i < howLong / 50 ; ++i )
-           delayMicroseconds(49);
-        int v = howLong%50;
-        if ( v > 0 ) delayMicroseconds(v);
-}
-
 //Envois d'une pulsation (passage de l'etat haut a l'etat bas)
 //1 = 310µs haut puis 1340µs bas
 //0 = 310µs haut puis 310µs bas
 void sendBit(bool b) {
  if (b) {
    digitalWrite(pin, HIGH);
-   myDelayMicroseconds(310);   //275 orinally, but tweaked.
+   delayMicroseconds(275);   //275 orinally, but tweaked to 310.
    digitalWrite(pin, LOW);
-   myDelayMicroseconds(1340);  //1225 orinally, but tweaked.
+   delayMicroseconds(1225);  //1225 orinally, but tweaked to 1340.
  }
  else {
    digitalWrite(pin, HIGH);
-   myDelayMicroseconds(310);   //275 orinally, but tweaked.
+   delayMicroseconds(275);   //275 orinally, but tweaked.
    digitalWrite(pin, LOW);
-   myDelayMicroseconds(310);   //275 orinally, but tweaked.
+   delayMicroseconds(275);   //275 orinally, but tweaked.
  }
 }
 
@@ -134,13 +127,13 @@ void transmit(int blnOn)
 
  // Sequence de verrou anoncant le départ du signal au recepeteur
  digitalWrite(pin, HIGH);
- myDelayMicroseconds(275);     // un bit de bruit avant de commencer pour remettre les delais du recepteur a 0
+ delayMicroseconds(275);     // un bit de bruit avant de commencer pour remettre les delais du recepteur a 0
  digitalWrite(pin, LOW);
- myDelayMicroseconds(9900);     // premier verrou de 9900µs
+ delayMicroseconds(9900);     // premier verrou de 9900µs
  digitalWrite(pin, HIGH);   // high again
- myDelayMicroseconds(275);      // attente de 275µs entre les deux verrous
+ delayMicroseconds(275);      // attente de 275µs entre les deux verrous
  digitalWrite(pin, LOW);    // second verrou de 2675µs
- myDelayMicroseconds(2675);
+ delayMicroseconds(2675);
  digitalWrite(pin, HIGH);  // On reviens en état haut pour bien couper les verrous des données
 
  // Envoie du code emetteur (272946 = 1000010101000110010  en binaire)
@@ -168,7 +161,7 @@ void transmit(int blnOn)
  }
  
  digitalWrite(pin, HIGH);   // coupure données, verrou
- myDelayMicroseconds(275);      // attendre 275µs
+ delayMicroseconds(275);      // attendre 275µs
  digitalWrite(pin, LOW);    // verrou 2 de 2675µs pour signaler la fermeture du signal
 
 }
@@ -179,7 +172,7 @@ void action (bool b) {
  	} else {
         log("envois du signal OFF");
 	}
-	for(int i=0;i<10;i++){
+	for(int i=0;i<5;i++){
 		transmit(b);              // envoyer
 		delay(10);                // attendre 10 ms (sinon le socket nous ignore)
 	}
