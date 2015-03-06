@@ -91,6 +91,7 @@ int main (int argc, char** argv)
     	}
     	mySwitch = RCSwitch();
     	mySwitch.enableReceive(pin);
+	mySwitch.setReceiveTolerance(68); //instead of default 60
 	log("Pin GPIO configure en entree");
 	
     	log("Attente d'un signal du transmetteur ...");
