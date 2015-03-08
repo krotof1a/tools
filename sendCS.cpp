@@ -43,6 +43,10 @@ void scheduler_realtime() {
 	if( sched_setscheduler( 0, SCHED_RR, &p ) == -1 ) {
 		perror("Failed to switch to realtime scheduler.");
 	}
+	
+	for (long i=0; i<50000000L; i++) {
+		// Boucle pour faire monter le CPU
+	}
 }
 
 void scheduler_standard() {
