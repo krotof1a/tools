@@ -95,6 +95,7 @@ int main (int argc, char** argv)
 	log("Pin GPIO configure en entree");
 	
     	log("Attente d'un signal du transmetteur ...");
+	piHiPri(99); // Increase process priority
 	for(;;)
     	{
 		string varcmd = "?type=command&param=udevice&idx=";

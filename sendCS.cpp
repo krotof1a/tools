@@ -37,26 +37,6 @@ void log(string a){
 	cout << a << endl;
 }
 
-void scheduler_realtime() {
-	struct sched_param p;
-	p.__sched_priority = sched_get_priority_max(SCHED_RR);
-	if( sched_setscheduler( 0, SCHED_RR, &p ) == -1 ) {
-		perror("Failed to switch to realtime scheduler.");
-	}
-	
-	for (long i=0; i<50000000L; i++) {
-		// Boucle pour faire monter le CPU
-	}
-}
-
-void scheduler_standard() {
-	struct sched_param p;
-	p.__sched_priority = 0;
-	if( sched_setscheduler( 0, SCHED_OTHER, &p ) == -1 ) {
-		perror("Failed to switch to normal scheduler.");
-	}
-}
-
 //Envois d'une pulsation (passage de l'etat haut a l'etat bas)
 //1 = 310µs haut puis 1340µs bas
 //0 = 310µs haut puis 310µs bas
@@ -190,7 +170,7 @@ int main (int argc, char** argv)
 		return 1;
 	}
 
-	scheduler_realtime();
+	piHiPri(99);
 
 	log("Demarrage du programme");
 	pin = atoi(argv[1]);
@@ -276,5 +256,4 @@ int main (int argc, char** argv)
 	}
 	log("Fin du programme");    // execution terminée.
 
-	scheduler_standard();
 }
