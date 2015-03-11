@@ -502,7 +502,7 @@ unsigned int* RCSwitch::getReceivedRawdata() {
  */
 bool RCSwitch::receiveProtocol1(unsigned int changeCount){
     
-	  unsigned long code = 0;
+      unsigned long code = 0;
       unsigned long delay = RCSwitch::timings[0] / 31;
       unsigned long delayTolerance = delay * RCSwitch::nReceiveTolerance * 0.01;    
 
@@ -518,27 +518,26 @@ bool RCSwitch::receiveProtocol1(unsigned int changeCount){
             i = changeCount;
             code = 0;
           }
-      }      
+      }
+      
       code = code >> 1;
-    if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
-      RCSwitch::nReceivedValue = code;
-      RCSwitch::nReceivedBitlength = changeCount / 2;
-      RCSwitch::nReceivedDelay = delay;
-	  RCSwitch::nReceivedProtocol = 1;
-    }
+      if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
+      	RCSwitch::nReceivedValue = code;
+      	RCSwitch::nReceivedBitlength = changeCount / 2;
+      	RCSwitch::nReceivedDelay = delay;
+	RCSwitch::nReceivedProtocol = 1;
+      }
 
-	if (code == 0){
+      if (code == 0){
 		return false;
-	}else if (code != 0){
+      } else if (code != 0){
 		return true;
-	}
-	
-
+      }
 }
 
 bool RCSwitch::receiveProtocol2(unsigned int changeCount){
     
-	  unsigned long code = 0;
+      unsigned long code = 0;
       unsigned long delay = RCSwitch::timings[0] / 10;
       unsigned long delayTolerance = delay * RCSwitch::nReceiveTolerance * 0.01;    
 
@@ -554,21 +553,21 @@ bool RCSwitch::receiveProtocol2(unsigned int changeCount){
             i = changeCount;
             code = 0;
           }
-      }      
+      } 
+      
       code = code >> 1;
-    if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
-      RCSwitch::nReceivedValue = code;
-      RCSwitch::nReceivedBitlength = changeCount / 2;
-      RCSwitch::nReceivedDelay = delay;
-	  RCSwitch::nReceivedProtocol = 2;
-    }
+      if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
+      	RCSwitch::nReceivedValue = code;
+      	RCSwitch::nReceivedBitlength = changeCount / 2;
+      	RCSwitch::nReceivedDelay = delay;
+	RCSwitch::nReceivedProtocol = 2;
+      }
 
-	if (code == 0){
+      if (code == 0){
 		return false;
-	}else if (code != 0){
+      } else if (code != 0){
 		return true;
-	}
-
+      }
 }
 
 bool RCSwitch::receiveProtocol6(unsigned int changeCount){
@@ -579,8 +578,7 @@ bool RCSwitch::receiveProtocol6(unsigned int changeCount){
       unsigned long delay1Tolerance = delay1 * RCSwitch::nReceiveTolerance * 0.01;    
       int prevBit = 0;
       int bit = 0;
- 
-      int j=0;
+      int j = 0;
 
 for (int i = 0; i<changeCount ; i++) {
 cerr << RCSwitch::timings[i]<<",";
@@ -602,7 +600,7 @@ cerr <<endl;
 	if(j % 2 == 1) {
 		if((prevBit ^ bit) == 0)
 				{
-					// doit être 01 ou 10,,pas 00 ou 11 sinon ou coupe la detection, c'est un parasite
+					// doit être 01 ou 10, pas 00 ou 11 sinon on coupe la detection, c'est un parasite
 					return false;
 				}
 
