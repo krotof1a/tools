@@ -12,13 +12,13 @@
 
 /*
 Script basé sur radioReception.cpp d'Idleman pour la partie DIO.
-g++ sendCS.cpp RCSwitch.cpp -o sendCS -lwiringPi pour recompiler
-Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"/portalCode/castoCode> <pulseDuration>
+Compil.: g++ sendCS.cpp RCSwitch.cpp -o sendCS -lwiringPi
+Usage:   ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"/portalCode> <pulseDuration>
  Ex:
  	./sendCS 0 12345 portal 1110001110
  	./sendCS 0 12345 1 on
  	./sendCS 0 12345 2 pulse 50
-	./sendCS 0 12345 a1 on
+	./sendCS 0 12345 a1 off
 */
 
 using namespace std;
@@ -33,7 +33,7 @@ int repeatNumber = 5;
 
 int pin;
 bool bit2[26]={};               // 26 bit Identifiant emetteur
-bool bit2Interruptor[4]={}; 
+bool bit2Interruptor[4]={};     //  4 bit Identifiant recepteur
 int sender;
 long group;
 int interruptor;
@@ -134,15 +134,9 @@ void transmit(int blnOn)
  sendPair(blnOn);
 
  // Envoie des 4 derniers bits, qui représentent le code interrupteur, ici 0 (encode sur 4 bit donc 0000)
- // nb: sur  les télécommandes officielle chacon, les interrupteurs sont logiquement nommés de 0 à x
- // interrupteur 1 = 0 (donc 0000) , interrupteur 2 = 1 (1000) , interrupteur 3 = 2 (0100) etc...
  for(i=0; i<4;i++)
  {
-	if(bit2Interruptor[i]==0){
-		sendPair(false);
-  }else{
-	sendPair(true);
-  }
+   sendPair(bit2Interruptor[i]);
  }
  
  // Sequence de verrou anoncant la fin du signal au recepeteur
@@ -156,7 +150,7 @@ void action (bool b) {
 	if (b) {
 		log("envois du signal ON");
  	} else {
-        log("envois du signal OFF");
+	        log("envois du signal OFF");
 	}
 	for(int i=0; i<repeatNumber; i++) {
 		transmit(b);       // Envoi le message X fois d'affilé
@@ -171,7 +165,7 @@ int main (int argc, char** argv)
 		return 1;
 	}
 
-	piHiPri(99);
+	piHiPri(99); // Put process in real-time mode
 
 	log("Demarrage du programme");
 	pin = atoi(argv[1]);
