@@ -29,7 +29,7 @@ int low0Length = 275;		//275 orinally, but tweaked to 310 on Pi A
 int low1Length = 1225;		//1225 orinally, but tweaked to 1340 on Pi A
 int lowStartLength = 2675;
 int lowEndLength = 10000;
-int repeatNumber = 5;
+int repeatNumber = 10;
 
 int pin;
 bool bit2[26]={};               // 26 bit Identifiant emetteur
