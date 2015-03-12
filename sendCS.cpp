@@ -23,8 +23,16 @@ Usage: ./sendCS <gpioPin> <senderCode> <deviceCode/"portal"> <"on"/"off"/"pulse"
 
 using namespace std;
 
+// DIO protocol constants
+int hiLenght = 275;             //275 orinally, but tweaked to 310 on Pi A
+int low0Length = 275;		//275 orinally, but tweaked to 310 on Pi A
+int low1Length = 1225;		//1225 orinally, but tweaked to 1340 on Pi A
+int lowStartLength = 2675;
+int lowEndLength = 10000;
+int repeatNumber = 5;
+
 int pin;
-bool bit2[26]={};              // 26 bit Identifiant emetteur
+bool bit2[26]={};               // 26 bit Identifiant emetteur
 bool bit2Interruptor[4]={}; 
 int sender;
 long group;
@@ -38,20 +46,18 @@ void log(string a){
 }
 
 //Envois d'une pulsation (passage de l'etat haut a l'etat bas)
-//1 = 310µs haut puis 1340µs bas
-//0 = 310µs haut puis 310µs bas
 void sendBit(bool b) {
  if (b) {
    digitalWrite(pin, HIGH);
-   delayMicroseconds(275);   //275 orinally, but tweaked to 310.
+   delayMicroseconds(hiLenght);
    digitalWrite(pin, LOW);
-   delayMicroseconds(1225);  //1225 orinally, but tweaked to 1340.
+   delayMicroseconds(low1Length);
  }
  else {
    digitalWrite(pin, HIGH);
-   delayMicroseconds(275);   //275 orinally, but tweaked.
+   delayMicroseconds(hiLenght);
    digitalWrite(pin, LOW);
-   delayMicroseconds(275);   //275 orinally, but tweaked.
+   delayMicroseconds(low0Length);
  }
 }
 
@@ -111,14 +117,9 @@ void transmit(int blnOn)
 
  // Sequence de verrou anoncant le départ du signal au recepeteur
  digitalWrite(pin, HIGH);
- delayMicroseconds(275);     // un bit de bruit avant de commencer pour remettre les delais du recepteur a 0
+ delayMicroseconds(hiLenght);
  digitalWrite(pin, LOW);
- delayMicroseconds(9900);     // premier verrou de 9900µs
- digitalWrite(pin, HIGH);   // high again
- delayMicroseconds(275);      // attente de 275µs entre les deux verrous
- digitalWrite(pin, LOW);    // second verrou de 2675µs
- delayMicroseconds(2675);
- digitalWrite(pin, HIGH);  // On reviens en état haut pour bien couper les verrous des données
+ delayMicroseconds(lowStartLength);
 
  // Envoie du code emetteur (272946 = 1000010101000110010  en binaire)
  for(i=0; i<26;i++)
@@ -144,10 +145,11 @@ void transmit(int blnOn)
   }
  }
  
- digitalWrite(pin, HIGH);   // coupure données, verrou
- delayMicroseconds(275);      // attendre 275µs
- digitalWrite(pin, LOW);    // verrou 2 de 2675µs pour signaler la fermeture du signal
-
+ // Sequence de verrou anoncant la fin du signal au recepeteur
+ digitalWrite(pin, HIGH);
+ delayMicroseconds(hiLenght);
+ digitalWrite(pin, LOW);
+ delayMicroseconds(lowEndLength);
 }
 
 void action (bool b) {
@@ -156,9 +158,8 @@ void action (bool b) {
  	} else {
         log("envois du signal OFF");
 	}
-	for(int i=0;i<5;i++){
-		transmit(b);              // envoyer
-		delay(10);                // attendre 10 ms (sinon le socket nous ignore)
+	for(int i=0; i<repeatNumber; i++) {
+		transmit(b);       // Envoi le message X fois d'affilé
 	}
 }
 
