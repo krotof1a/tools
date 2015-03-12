@@ -49,7 +49,7 @@ int openUrl (string urlToOpen) {
 	CURL* curl = curl_easy_init(); 
 	struct timeval currentSend;
 	if(urlToOpen.compare(lastUrl) == 0 &&
-	   currentSend.tv_sec - lastSent.tv_sec < 3) {
+	   currentSend.tv_sec - lastSent.tv_sec < 4) {
 		// Avoid to resend the same Url within 3 seconds
 		return -1;
 	}
