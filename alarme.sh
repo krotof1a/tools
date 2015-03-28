@@ -4,6 +4,7 @@ if [ "$1" = "start" ]
 then
 	echo "Starting alarm ..."
 	sleep 10
+	amixer cset numid=3 1
 	sudo tts "Attention\! Intrusion en cours\!"
 	while [ true ]
 	do
