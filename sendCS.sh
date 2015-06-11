@@ -7,4 +7,4 @@
 /home/osmc/tools/sendCS $*
 
 # No need to start reception daemon again as it will
-# be done automaticaly after 5 seconds
+# be done automaticaly after some delay
