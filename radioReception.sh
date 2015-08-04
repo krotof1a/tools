@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Create FIFO if not exists
+FIFO=/tmp/radioReceptionFIFO
+if [ ! -p $FIFO ]
+then
+	mkfifo $FIFO
+fi
+
 while [ true ]
 do
 	/home/osmc/tools/radioReception \
@@ -8,8 +15,10 @@ do
 		10 16 \
 		736 14 \
 		41 27 \
-		809 34 2> /dev/zero
+		809 34 \
+		2>&1 | /home/osmc/tools/ftee $FIFO > /dev/zero
 	sleep 3 # Wait in case reception has been killed for emission
 done
 
+\rm -f $FIFO
 return 0;
