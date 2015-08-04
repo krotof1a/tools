@@ -14,6 +14,7 @@ do
 		2 \
 		10 16 \
 		736 14 \
+		737 52 \
 		41 27 \
 		809 34 \
 		2>&1 | /home/osmc/tools/ftee $FIFO > /dev/zero
