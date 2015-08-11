@@ -49,6 +49,16 @@
 // We can handle up to (unsigned long) => 32 bit * 2 H/L changes per bit + 2 for sync
 #define RCSWITCH_MAX_CHANGES 104
 
+// Encodings
+#define RCSWITCH_ENCODING_RCS1  1
+#define RCSWITCH_ENCODING_RCS2  2
+#define RCSWITCH_ENCODING_BFT	5
+#define RCSWITCH_ENCODING_DIO   6
+#define RCSWITCH_ENCODING_WT450 7
+#define RCSWITCH_ENCODING_LACR1 8
+#define RCSWITCH_ENCODING_LACR2 9
+#define RCSWITCH_ENCODING_LACR3 10
+
 class RCSwitch {
 
   public:
