@@ -205,10 +205,10 @@ int main (int argc, char** argv)
     }
 	
 	if (interruptor == -1) {
-		log("Lancement en mode RCSwitch ...");
+		log("Lancement en mode BFT ...");
 		RCSwitch mySwitch = RCSwitch();
 		mySwitch.enableTransmit(pin);
-		mySwitch.setProtocol(5);
+		mySwitch.setProtocol(RCSWITCH_ENCODING_BFT);
 		mySwitch.setRepeatTransmit(10);
 		mySwitch.send(const_cast<char*>(onoff.c_str()));
 		if (pulse > 0) {
@@ -219,7 +219,7 @@ int main (int argc, char** argv)
 		log("Lancement en mode Casto ...");
                 RCSwitch mySwitch = RCSwitch();
                 mySwitch.enableTransmit(pin);
-                mySwitch.setProtocol(1);
+                mySwitch.setProtocol(RCSWITCH_ENCODING_RCS1);
                 mySwitch.setRepeatTransmit(10);
 		group = group << 15;
 		interruptor = interruptor << 9;
