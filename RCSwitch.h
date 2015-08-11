@@ -69,12 +69,12 @@ class RCSwitch {
     void enableReceive();
     void disableReceive();
     bool available();
-	void resetAvailable();
+    void resetAvailable();
 	
     unsigned long getReceivedValue();
     unsigned int getReceivedBitlength();
     unsigned int getReceivedDelay();
-	unsigned int getReceivedProtocol();
+    unsigned int getReceivedProtocol();
     unsigned int* getReceivedRawdata();
   
     void enableTransmit(int nTransmitterPin);
@@ -82,8 +82,8 @@ class RCSwitch {
     void setPulseLength(int nPulseLength);
     void setRepeatTransmit(int nRepeatTransmit);
     void setReceiveTolerance(int nPercent);
-	void setProtocol(int nProtocol);
-	void setProtocol(int nProtocol, int nPulseLength);
+    void setProtocol(int nProtocol);
+    void setProtocol(int nProtocol, int nPulseLength);
   
   private:
     char* getCodeWordB(int nGroupNumber, int nSwitchNumber, boolean bStatus);
@@ -100,20 +100,24 @@ class RCSwitch {
     static char* dec2binWzerofill(unsigned long dec, unsigned int length);
     
     static void handleInterrupt();
-	static bool receiveProtocol1(unsigned int changeCount);
-	static bool receiveProtocol2(unsigned int changeCount);
-	static bool receiveProtocol6(unsigned int changeCount);
+    static bool receiveProtocol1(unsigned int changeCount);
+    static bool receiveProtocol2(unsigned int changeCount);
+    /** Added reception protocols **/
+    static bool receiveProtocolDIO(unsigned int changeCount);
+    static bool receiveLaCrosse(unsigned int changeCount);
+    static bool receiveWT450(unsigned int changeCount);
+
     int nReceiverInterrupt;
     int nTransmitterPin;
     int nPulseLength;
     int nRepeatTransmit;
 	char nProtocol;
 
-	static int nReceiveTolerance;
+    static int nReceiveTolerance;
     static unsigned long nReceivedValue;
     static unsigned int nReceivedBitlength;
-	static unsigned int nReceivedDelay;
-	static unsigned int nReceivedProtocol;
+    static unsigned int nReceivedDelay;
+    static unsigned int nReceivedProtocol;
     static unsigned int timings[RCSWITCH_MAX_CHANGES];
     
 };
