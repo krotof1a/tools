@@ -570,7 +570,7 @@ bool RCSwitch::receiveProtocol2(unsigned int changeCount){
       }
 }
 
-bool RCSwitch::receiveProtocol6(unsigned int changeCount){
+bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
       unsigned long code = 0;
       unsigned long delay0 = 240;
       unsigned long delay0Tolerance = delay0 * RCSwitch::nReceiveTolerance * 0.01;    
@@ -580,10 +580,11 @@ bool RCSwitch::receiveProtocol6(unsigned int changeCount){
       int bit = 0;
       int j = 0;
 
-for (int i = 0; i<changeCount ; i++) {
-cerr << RCSwitch::timings[i]<<",";
-}
-cerr <<endl;
+      // For logging purposes, uncomment this block
+      // for (int i = 0; i<changeCount ; i++) {
+      //		cerr << RCSwitch::timings[i]<<",";
+      //}
+      //cerr <<endl;
 
       for (int i = 13; i<changeCount ; i=i+2) {
 	//Définition du bit (0 ou 1)
@@ -598,42 +599,32 @@ cerr <<endl;
 	}
 
 	if(j % 2 == 1) {
-		if((prevBit ^ bit) == 0)
-				{
-					// doit être 01 ou 10, pas 00 ou 11 sinon on coupe la detection, c'est un parasite
-					return false;
-				}
-
-				if(j < 12)
-				{
-					// les 26 premiers (0-25) bits sont l'identifiants de la télécommande
-					code <<= 1;
-					code |= prevBit;
-				}      
-				else if(j == 13)
-				{
-					// le 26em bit est le bit de groupe
-					code <<= 1;
-					code |= prevBit;
-				}
-				else if(j == 15)
-				{
-					// le 27em bit est le bit d'etat (on/off)
-					code <<= 1;
-					code |= prevBit;
-				}
-			
-				else
-				{
-					// les 4 derniers bits (28-32) sont l'identifiant de la rangée de bouton
-					code <<= 1;
-					code |= prevBit;
-				}
-			}
+		if((prevBit ^ bit) == 0) {
+			// doit être 01 ou 10, pas 00 ou 11 sinon on coupe la detection, c'est un parasite
+			return false;
+		}
+		if(j < 12) {
+			// les 26 premiers (0-25) bits sont l'identifiants de la télécommande
+			code <<= 1;
+			code |= prevBit;
+		} else if(j == 13) {
+			// le 26em bit est le bit de groupe
+			code <<= 1;
+			code |= prevBit;
+		} else if(j == 15) {
+			// le 27em bit est le bit d'etat (on/off)
+			code <<= 1;
+			code |= prevBit;
+		} else {
+			// les 4 derniers bits (28-32) sont l'identifiant de la rangée de bouton
+				code <<= 1;
+				code |= prevBit;
+		}
+	}
 	prevBit = bit;
 	j++;
       }  
-      if (changeCount > 6) {    // ignore < 4bit values as there are no devices sending 4bit values => noise
+      if (changeCount > 60) {
         RCSwitch::nReceivedValue = code;
         RCSwitch::nReceivedBitlength = (changeCount-5) / 4;
         RCSwitch::nReceivedDelay = delay0;
@@ -648,6 +639,99 @@ cerr <<endl;
 
 }
 
+bool RCSwitch::receiveWT450(unsigned int changeCount)
+{
+	unsigned long long code = 0ull;
+	unsigned int HighWidth = 2000;
+	unsigned int LowWidth = 1000;
+	unsigned int delayTolerance = 300;
+	unsigned int bitLength=0;
+
+	for (int i = 1; i<changeCount ; i++) {
+		if (RCSwitch::timings[i] > HighWidth-delayTolerance && RCSwitch::timings[i] < HighWidth+delayTolerance) {
+			code = code << 1;
+			bitLength++;
+		} else if ( RCSwitch::timings[i] > LowWidth-delayTolerance && RCSwitch::timings[i] < LowWidth+delayTolerance) {
+			if ( RCSwitch::timings[i+1] > LowWidth-delayTolerance && RCSwitch::timings[i+1] < LowWidth+delayTolerance) {
+				code+=1;
+				code = code << 1;
+				i++;
+				bitLength++;
+			} else {
+				// Failed 
+				i = changeCount;
+			}
+		} else {
+			// Failed
+			i = changeCount;
+			if (i<50) {
+				code = 0;
+			}
+		}
+	}
+		
+	code = code >> 1;
+	if ((changeCount > 50) && (bitLength==36)) {
+		// there is no checksum of this unit, so using preamble and 2 fixed bits to check
+		// Preamble= 1100 (first four bits)
+		if( code & 0xC03000000ull) {
+			RCSwitch::nReceivedValue = code;
+			RCSwitch::nReceivedBitlength = bitLength;
+			RCSwitch::nReceivedDelay = 1000;
+			RCSwitch::nReceivedProtocol = 7;
+			return true;
+		}
+		else 
+			return false;
+	} else
+		return false;
+}
+
+bool RCSwitch::receiveLaCrosse(unsigned int changeCount)
+{
+	unsigned long long code = 0ull;
+	unsigned long delay = RCSwitch::timings[0] / 3;
+
+	unsigned int HighWidth = 1500;
+	unsigned int LowWidth = 500;
+	unsigned int delayTolerance = 200;
+
+	for (int i = 1; i<changeCount ; i=i+2) {
+		if (RCSwitch::timings[i] > HighWidth-delayTolerance && RCSwitch::timings[i] < HighWidth+delayTolerance) {
+			code = code << 1;
+		}
+		else if ( RCSwitch::timings[i] > LowWidth-delayTolerance && RCSwitch::timings[i] < LowWidth+delayTolerance) {
+			code+=1;
+			code = code << 1;
+		} else {
+			// Failed
+			i = changeCount;
+			code = 0;
+		}
+	}
+
+	code = code >> 1;
+	if (changeCount > 80) {
+		if(code>0){
+			RCSwitch::nReceivedValue = code;
+			RCSwitch::nReceivedBitlength = changeCount / 2;
+			RCSwitch::nReceivedDelay = 500;
+			if (changeCount<100) 
+				RCSwitch::nReceivedProtocol = 8;
+			else if (changeCount==104) 
+				RCSwitch::nReceivedProtocol = 9;
+			else
+				RCSwitch::nReceivedProtocol = 10;
+		}
+	}
+
+	if (code == 0)
+		return false;
+	else
+		return true;
+	
+}
+
 void RCSwitch::handleInterrupt() {
 
   static unsigned int duration;
@@ -658,31 +742,39 @@ void RCSwitch::handleInterrupt() {
   long time = micros();
   duration = time - lastTime;
   
-  if (RCSwitch::timings[0] > 5000 && RCSwitch::timings[2] > 2500) {
-	// May be DIO code
-	if (receiveProtocol6(61) == false){
-        	//failed
-        }
-	changeCount=0;
-	RCSwitch::timings[0]=0;
-	RCSwitch::timings[2]=0;
-  }
-
-  if (duration > 5000 && duration > RCSwitch::timings[0] - 200 && duration < RCSwitch::timings[0] + 200) {    
-    repeatCount++;
-    changeCount--;
-
-    if (repeatCount == 2) {
-                if (receiveProtocol1(changeCount) == false){
-                        if (receiveProtocol2(changeCount) == false){
-                                //failed
-                        }
-                }
-      repeatCount = 0;
-    }
-    changeCount = 0;
+  if (duration > 5000 && RCSwitch::timings[0]>5000) {    
+		repeatCount++;
+		
+    		if ((repeatCount == 1)) {
+			if(changeCount>20) {
+				if (changeCount>80) {
+					if (receiveLaCrosse(changeCount) == false) {
+						//failed
+					}
+				} else if (changeCount>60) {
+					if (RCSwitch::timings[2] > 2500 && receiveProtocolDIO(61) == false){
+        					//failed
+        				}
+				} else if (changeCount>50) {
+					if (receiveWT450(changeCount) == false) {
+						//failed
+					}
+				} else {
+					changeCount--;
+					if (receiveProtocol1(changeCount) == false) {
+						if (receiveProtocol2(changeCount) == false) {
+							//failed
+						}
+					}		
+				}
+			}
+			repeatCount = 0;
+		}
+		changeCount = 0;
+		
   } else if (duration > 5000) {
     changeCount = 0;
+    repeatCount=0;
   }
 
   if (changeCount >= RCSWITCH_MAX_CHANGES) {
