@@ -11,7 +11,7 @@
 #include <curl/curl.h> 
 #include <unistd.h>
 
-// Puis lancer g++ -lwiringPi -lcurl -o radioReception RCSwitch.cpp radioReception.cpp
+// Pour compiler, lancer g++ -lwiringPi -lcurl -o radioReception RCSwitch.cpp radioReception.cpp
 
 // Utilisation: sudo ./radioReception http://[ip]:[port]/json.htm [emiter_pin] [[hw_sensor_code] [domoticz_sens_idx]]
 // Ex: sudo ./radioReception http://localhost:8080/json.htm 2 10 16 2>&1 /dev/zero
@@ -111,8 +111,8 @@ int main (int argc, char** argv)
            		if (value == 0) {
           			log("Encoding inconnu");
         		} else {    
-			   if (mySwitch.getReceivedProtocol()==6) {
-				//DIO message (pour telecommande ou detecteur d'ouverture)
+			   if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_DIO) {
+				// DIO message (pour telecommande ou detecteur d'ouverture)
 				receiv = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 				positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bits
  				emiter = mySwitch.getReceivedValue() >> 6; // décalage de 6 digits à droite
@@ -133,13 +133,13 @@ int main (int argc, char** argv)
 				        mySwitch.resetAvailable();
 					continue;
 				}	
-			   } else if (mySwitch.getReceivedProtocol()==1) {
-				//RCSwitch protocol 1 : transmet une temperature
+			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_RCS1) {
+				// RCSwitch protocol 1 : transmet une temperature
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bit
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
 			        log("------------------------------");
-				log("Donnees RCSwitch detectees");
+				log("Donnees RCSwitch 1 detectees");
 				log("code sonde  = " +longToString(emiter));
 				log("positif     = " + longToString(positive));
 				log("temperature = " + floatToString(temperature));
@@ -151,12 +151,12 @@ int main (int argc, char** argv)
 				} else {
 					varcmd.append("&svalue=-"+floatToString(temperature));
 				}
-			   } else {
-				//RCSwitch protocol 2 : change un switch (sans lancer d'action) pour retour d'etat
+			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_RCS2) {
+				// RCSwitch protocol 2 : change un switch (sans lancer d'action) pour retour d'etat
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
 			        log("------------------------------");
-				log("Donnees RCSwitch detectees");
+				log("Donnees RCSwitch 2 detectees");
 				log("code sonde  = " +longToString(emiter));
 				log("on/off = " + floatToString(temperature));
 				
@@ -170,6 +170,12 @@ int main (int argc, char** argv)
 				        mySwitch.resetAvailable();
 					continue;
 				}	
+			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_WT450) {
+			   	log("------------------------------");
+				log("Donnees WT450 detectees");
+			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR1 || mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR2 || mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR3) {
+			   	log("------------------------------");
+				log("Donnees LaCrosse detectees");
 			   }
 			   log("Execution de l'URL ...");
 			   log((command+varcmd).c_str());
