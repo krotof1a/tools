@@ -52,13 +52,13 @@ RCSwitch::RCSwitch() {
   */
 void RCSwitch::setProtocol(int nProtocol) {
   this->nProtocol = nProtocol;
-  if (nProtocol == 1){
+  if (nProtocol == RCSWITCH_ENCODING_RCS1){
 	  this->setPulseLength(350);
   }
-  else if (nProtocol == 2) {
+  else if (nProtocol == RCSWITCH_ENCODING_RCS2) {
 	  this->setPulseLength(650);
   }
-  else if (nProtocol == 5) {
+  else if (nProtocol == RCSWITCH_ENCODING_BFT) {
 	  this->setPulseLength(950);
   }
 }
@@ -363,13 +363,13 @@ void RCSwitch::transmit(int nHighPulses, int nLowPulses) {
  * Waveform Protocol 2: | |__
  */
 void RCSwitch::send0() {
-	if (this->nProtocol == 1){
+	if (this->nProtocol == RCSWITCH_ENCODING_RCS1){
 		this->transmit(1,3);
 	}
-	else if (this->nProtocol == 2) {
+	else if (this->nProtocol == RCSWITCH_ENCODING_RCS2) {
 		this->transmit(1,2);
 	}
-	else if (this->nProtocol == 5) {
+	else if (this->nProtocol == RCSWITCH_ENCODING_BFT) {
 		this->transmit(2,2);
 	}
 }
@@ -525,7 +525,7 @@ bool RCSwitch::receiveProtocol1(unsigned int changeCount){
       	RCSwitch::nReceivedValue = code;
       	RCSwitch::nReceivedBitlength = changeCount / 2;
       	RCSwitch::nReceivedDelay = delay;
-	RCSwitch::nReceivedProtocol = 1;
+	RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_RCS1;
       }
 
       if (code == 0){
@@ -560,7 +560,7 @@ bool RCSwitch::receiveProtocol2(unsigned int changeCount){
       	RCSwitch::nReceivedValue = code;
       	RCSwitch::nReceivedBitlength = changeCount / 2;
       	RCSwitch::nReceivedDelay = delay;
-	RCSwitch::nReceivedProtocol = 2;
+	RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_RCS2;
       }
 
       if (code == 0){
@@ -628,7 +628,7 @@ bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
         RCSwitch::nReceivedValue = code;
         RCSwitch::nReceivedBitlength = (changeCount-5) / 4;
         RCSwitch::nReceivedDelay = delay0;
-	RCSwitch::nReceivedProtocol = 6;
+	RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_DIO;
       }
 
       if (code == 0){
@@ -678,7 +678,7 @@ bool RCSwitch::receiveWT450(unsigned int changeCount)
 			RCSwitch::nReceivedValue = code;
 			RCSwitch::nReceivedBitlength = bitLength;
 			RCSwitch::nReceivedDelay = 1000;
-			RCSwitch::nReceivedProtocol = 7;
+			RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_WT450;
 			return true;
 		}
 		else 
@@ -717,11 +717,11 @@ bool RCSwitch::receiveLaCrosse(unsigned int changeCount)
 			RCSwitch::nReceivedBitlength = changeCount / 2;
 			RCSwitch::nReceivedDelay = 500;
 			if (changeCount<100) 
-				RCSwitch::nReceivedProtocol = 8;
+				RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_LACR1;
 			else if (changeCount==104) 
-				RCSwitch::nReceivedProtocol = 9;
+				RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_LACR2;
 			else
-				RCSwitch::nReceivedProtocol = 10;
+				RCSwitch::nReceivedProtocol = RCSWITCH_ENCODING_LACR3;
 		}
 	}
 
