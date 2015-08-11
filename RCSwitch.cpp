@@ -581,10 +581,10 @@ bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
       int j = 0;
 
       // For logging purposes, uncomment this block
-      // for (int i = 0; i<changeCount ; i++) {
-      //		cerr << RCSwitch::timings[i]<<",";
-      //}
-      //cerr <<endl;
+      for (int i = 0; i<changeCount ; i++) {
+      		cerr << RCSwitch::timings[i]<<",";
+      }
+      cerr <<endl;
 
       for (int i = 13; i<changeCount ; i=i+2) {
 	//Définition du bit (0 ou 1)
@@ -617,14 +617,14 @@ bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
 			code |= prevBit;
 		} else {
 			// les 4 derniers bits (28-32) sont l'identifiant de la rangée de bouton
-				code <<= 1;
-				code |= prevBit;
+			code <<= 1;
+			code |= prevBit;
 		}
 	}
 	prevBit = bit;
 	j++;
       }  
-      if (changeCount > 60) {
+      if (changeCount > 4) {
         RCSwitch::nReceivedValue = code;
         RCSwitch::nReceivedBitlength = (changeCount-5) / 4;
         RCSwitch::nReceivedDelay = delay0;
@@ -741,6 +741,16 @@ void RCSwitch::handleInterrupt() {
 
   long time = micros();
   duration = time - lastTime;
+
+  if (RCSwitch::timings[0] > 5000 && RCSwitch::timings[2] > 2500) {
+	// May be DIO code
+	if (receiveProtocolDIO(61) == false){
+        	//failed
+        }
+	changeCount=0;
+	RCSwitch::timings[0]=0;
+	RCSwitch::timings[2]=0;
+  }
   
   if (duration > 5000 && RCSwitch::timings[0]>5000) {    
 		repeatCount++;
@@ -751,10 +761,6 @@ void RCSwitch::handleInterrupt() {
 					if (receiveLaCrosse(changeCount) == false) {
 						//failed
 					}
-				} else if (changeCount>60) {
-					if (RCSwitch::timings[2] > 2500 && receiveProtocolDIO(61) == false){
-        					//failed
-        				}
 				} else if (changeCount>50) {
 					if (receiveWT450(changeCount) == false) {
 						//failed

@@ -176,7 +176,10 @@ int main (int argc, char** argv)
 			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR1 || mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR2 || mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR3) {
 			   	log("------------------------------");
 				log("Donnees LaCrosse detectees");
-			   }
+			   } else {
+			   	log("------------------------------");
+				log("Other encoding");
+			   }				
 			   log("Execution de l'URL ...");
 			   log((command+varcmd).c_str());
 			   openUrl((command+varcmd).c_str());
