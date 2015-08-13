@@ -47,17 +47,17 @@
 
 // Number of maximum High/Low changes per packet.
 // We can handle up to (unsigned long) => 32 bit * 2 H/L changes per bit + 2 for sync
-#define RCSWITCH_MAX_CHANGES 67
+#define RCSWITCH_MAX_CHANGES 140
 
 // Encodings
-#define RCSWITCH_ENCODING_RCS1  1
-#define RCSWITCH_ENCODING_RCS2  2
-#define RCSWITCH_ENCODING_BFT	5
-#define RCSWITCH_ENCODING_DIO   6
-#define RCSWITCH_ENCODING_WT450 7
-#define RCSWITCH_ENCODING_LACR1 8
-#define RCSWITCH_ENCODING_LACR2 9
-#define RCSWITCH_ENCODING_LACR3 10
+#define RCSWITCH_ENCODING_RCS1  1  // Native RCSwitch 1 protocol
+#define RCSWITCH_ENCODING_RCS2  2  // Native RCSwitch 2 protocol
+#define RCSWITCH_ENCODING_BFT	5  // Added BFT protocol (sending only)
+#define RCSWITCH_ENCODING_DIO   6  // Added DIO protocol (reception only)
+#define RCSWITCH_ENCODING_WT450 7  // Added WT450 protocol (reception only)
+#define RCSWITCH_ENCODING_LACR1 8  // Added Lacrosse 1 protocol (reception only)
+#define RCSWITCH_ENCODING_LACR2 9  // Added Lacrosse 2 protocol (reception only)
+#define RCSWITCH_ENCODING_LACR3 10 // Added Lacrosse 3 protocol (reception only)
 
 class RCSwitch {
 
@@ -121,7 +121,7 @@ class RCSwitch {
     int nTransmitterPin;
     int nPulseLength;
     int nRepeatTransmit;
-	char nProtocol;
+    char nProtocol;
 
     static int nReceiveTolerance;
     static unsigned long nReceivedValue;
