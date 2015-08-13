@@ -580,38 +580,40 @@ bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
       int bit = 0;
       int j = 0;
 
-      // For logging purposes, uncomment this block
-      for (int i = 0; i<changeCount ; i++) {
-      		cerr << RCSwitch::timings[i]<<",";
-      }
-      cerr <<endl;
+      // Test first and second latch presence
+      if (RCSwitch::timings[0]<8000 || RCSwitch::timings[2]<2500)
+      	return false;
 
-      for (int i = 13; i<changeCount ; i=i+2) {
+      // Then process possible DIO message
+      cerr << endl << "DIO Manchester value : ";
+      for (int i = 4; i<changeCount ; i=i+2) {
 	//Définition du bit (0 ou 1)
 	if(RCSwitch::timings[i] > (delay0 - delay0Tolerance) && 
 	   RCSwitch::timings[i] < (delay0 + delay0Tolerance)){
 		bit = 0;
+		cerr << "0";
 	} else if(RCSwitch::timings[i] > (delay1 - delay1Tolerance) &&
            RCSwitch::timings[i] < (delay1 + delay1Tolerance)){
 		bit = 1;
+		cerr << "1";
 	} else {
 	   return false;
 	}
-
+	
 	if(j % 2 == 1) {
 		if((prevBit ^ bit) == 0) {
 			// doit être 01 ou 10, pas 00 ou 11 sinon on coupe la detection, c'est un parasite
 			return false;
 		}
-		if(j < 12) {
+		if(j < 53) {
 			// les 26 premiers (0-25) bits sont l'identifiants de la télécommande
 			code <<= 1;
 			code |= prevBit;
-		} else if(j == 13) {
+		} else if(j == 53) {
 			// le 26em bit est le bit de groupe
 			code <<= 1;
 			code |= prevBit;
-		} else if(j == 15) {
+		} else if(j == 55) {
 			// le 27em bit est le bit d'etat (on/off)
 			code <<= 1;
 			code |= prevBit;
@@ -624,7 +626,7 @@ bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
 	prevBit = bit;
 	j++;
       }  
-      if (changeCount > 4) {
+      if (changeCount > 120) {
         RCSwitch::nReceivedValue = code;
         RCSwitch::nReceivedBitlength = (changeCount-5) / 4;
         RCSwitch::nReceivedDelay = delay0;
@@ -633,7 +635,7 @@ bool RCSwitch::receiveProtocolDIO(unsigned int changeCount){
 
       if (code == 0){
 		return false;
-      }else if (code != 0){
+      } else if (code != 0){
 		return true;
       }
 
@@ -742,28 +744,22 @@ void RCSwitch::handleInterrupt() {
   long time = micros();
   duration = time - lastTime;
 
-  if (RCSwitch::timings[0] > 5000 && RCSwitch::timings[2] > 2500) {
-	// May be DIO code
-	if (receiveProtocolDIO(61) == false){
-        	//failed
-        }
-	changeCount=0;
-	RCSwitch::timings[0]=0;
-	RCSwitch::timings[2]=0;
-  }
-  
   if (duration > 5000 && RCSwitch::timings[0]>5000) {    
 		repeatCount++;
 		
     		if ((repeatCount == 1)) {
 			if(changeCount>20) {
-				if (changeCount>80) {
+				if (changeCount>120) {
+					if (receiveProtocolDIO(changeCount) == false){
+        					//failed
+        				}
+				} else if (changeCount>80) {
 					if (receiveLaCrosse(changeCount) == false) {
 						//failed
 					}
 				} else if (changeCount>50) {
 					if (receiveWT450(changeCount) == false) {
-						//failed
+        					//failed
 					}
 				} else {
 					changeCount--;
