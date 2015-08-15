@@ -170,12 +170,6 @@ int main (int argc, char** argv)
 				        mySwitch.resetAvailable();
 					continue;
 				}	
-			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_WT450) {
-			   	log("------------------------------");
-				log("Donnees WT450 detectees");
-			   } else if (mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR1 || mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR2 || mySwitch.getReceivedProtocol()==RCSWITCH_ENCODING_LACR3) {
-			   	log("------------------------------");
-				log("Donnees LaCrosse detectees");
 			   } else {
 			   	log("------------------------------");
 				log("Other encoding");

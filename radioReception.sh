@@ -15,8 +15,8 @@ do
 		10 16 \
 		736 14 \
 		737 52 \
-		41 27 \
 		809 34 \
+		41 27 \
 		489 54 \
 		2>&1 | /home/osmc/tools/ftee $FIFO > /dev/zero
 	sleep 3 # Wait in case reception has been killed for emission
