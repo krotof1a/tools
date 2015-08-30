@@ -55,7 +55,7 @@ void RCSwitch::setProtocol(int nProtocol) {
   if (nProtocol == RCSWITCH_ENCODING_RCS1){
 	  this->setPulseLength(350);
   }
-  else if (nProtocol == RCSWITCH_ENCODING_RCS2) {
+  else if (nProtocol == RCSWITCH_ENCODING_RCS1) {
 	  this->setPulseLength(650);
   }
   else if (nProtocol == RCSWITCH_ENCODING_BFT) {
@@ -382,13 +382,13 @@ void RCSwitch::send0() {
  * Waveform Protocol 2: |  |_
  */
 void RCSwitch::send1() {
-  	if (this->nProtocol == 1){
+  	if (this->nProtocol == RCSWITCH_ENCODING_RCS1){
 		this->transmit(3,1);
 	}
-	else if (this->nProtocol == 2) {
+	else if (this->nProtocol == RCSWITCH_ENCODING_RCS2) {
 		this->transmit(2,1);
 	}
-	else if (this->nProtocol == 5) {
+	else if (this->nProtocol == RCSWITCH_ENCODING_BFT) {
 		this->transmit(1,1);
 	}
 }
@@ -433,13 +433,13 @@ void RCSwitch::sendTF() {
  */
 void RCSwitch::sendSync() {
 
-    if (this->nProtocol == 1){
+    if (this->nProtocol == RCSWITCH_ENCODING_RCS1){
 		this->transmit(1,31);
 	}
-	else if (this->nProtocol == 2) {
+	else if (this->nProtocol == RCSWITCH_ENCODING_RCS2) {
 		this->transmit(1,10);
 	}
-	else if (this->nProtocol == 5) {
+	else if (this->nProtocol == RCSWITCH_ENCODING_BFT) {
 		this->transmit(1,2);
 		this->transmit(1,2);
 		this->transmit(1,32);
@@ -642,7 +642,7 @@ cerr <<endl;
 
       if (code == 0){
 		return false;
-      } else if (code != 0){
+      }else if (code != 0){
 		return true;
       }
 
@@ -657,7 +657,7 @@ void RCSwitch::handleInterrupt() {
 
   long time = micros();
   duration = time - lastTime;
-
+  
   if (RCSwitch::timings[0] > 5000 && RCSwitch::timings[2] > 2500) {
 	// May be DIO code
 	if (receiveProtocolDIO(61) == false){
@@ -690,9 +690,8 @@ void RCSwitch::handleInterrupt() {
     repeatCount = 0;
   }
   RCSwitch::timings[changeCount++] = duration;
-  lastTime = time;
+  lastTime = time;  
 }
-
 /**
   * Turns a decimal value to its binary representation
   */

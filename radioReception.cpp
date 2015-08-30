@@ -129,7 +129,7 @@ int main (int argc, char** argv)
 				} else if (positive==1) {
 					varcmd.append("&nvalue=1");
 				} else {
-					log("Reception incorrecte");
+					log("Reception DIO incorrecte");
 				        mySwitch.resetAvailable();
 					continue;
 				}	
@@ -138,6 +138,11 @@ int main (int argc, char** argv)
 			        emiter = mySwitch.getReceivedValue() & 15; //masque sur les 4 derniers bits
 			        positive = (mySwitch.getReceivedValue() >> 4) & 1; // decalage de 4 à droite et masque sur le dernier bit
 			        temperature = (float)(mySwitch.getReceivedValue() >> 5) / (float)100; //decalage de 5 digits à droite
+				if (temperature > 60) {
+					log("Temperature incorrecte");
+					mySwitch.resetAvailable();
+                                        continue;
+				}
 			        log("------------------------------");
 				log("Donnees RCSwitch 1 detectees");
 				log("code sonde  = " +longToString(emiter));
