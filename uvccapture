@@ -1,13 +1,6 @@
 #!/bin/sh
-
 eval last=\${$#}
+FILE=`echo $last |cut -c 3-200`
 
-#Test Brightness with normal seeting
-testfile=`echo $last | cut -c3-1000` 
-/usr/bin/uvccapture.bin -S80 -B128 -C128 -G80 -x640 -y480 -q100 $last
-pcent=`convert $testfile -colorspace hsb  -resize 1x1  txt:- | tail -1 | cut -f6 -d',' | cut -f1 -d'.'`
-
-if [ $pcent < 50 ]
-then
-	/usr/bin/uvccapture.bin -S80 -B225 -C128 -G80 -x640 -y480 -q100 $last
-fi
+export QUERY_STRING=1
+/home/pi/tools/nph-mjgrab > $FILE
