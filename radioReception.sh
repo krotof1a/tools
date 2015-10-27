@@ -9,16 +9,16 @@ fi
 
 while [ true ]
 do
-	/home/osmc/tools/radioReception \
+	/home/pi/tools/radioReception \
 		http://localhost:5665/json.htm \
 		2 \
 		10 16 \
-		736 14 \
-		737 52 \
-		809 34 \
-		41 27 \
-		489 54 \
-		2>&1 | /home/osmc/tools/ftee $FIFO > /dev/zero
+		185780960 14 \
+		185780961 52 \
+		202954537 34 \
+		202962985 27 \
+		246798825 54 \
+		2>&1 | /home/pi/tools/ftee $FIFO > /dev/zero
 	sleep 3 # Wait in case reception has been killed for emission
 done
 
