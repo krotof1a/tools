@@ -18,6 +18,9 @@ do
 		202954537 34 \
 		202962985 27 \
 		246798825 54 \
+		293464352 69 \
+		235067360 69 \
+		293452576 70 \
 		2>&1 | /home/pi/tools/ftee $FIFO > /dev/zero
 	sleep 3 # Wait in case reception has been killed for emission
 done
