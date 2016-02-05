@@ -64,3 +64,52 @@ boolean Plugin_404(byte function, char *string) {
       return true;
 }
 #endif // Plugin_404
+
+#ifdef PLUGIN_TX_404
+void RCS1_Send(unsigned long address);           // sends 0 and 1
+
+boolean PluginTX_404(byte function, char *string) {
+      boolean success=false;
+
+      if (strncasecmp(InputBuffer_Serial+3,"KAKU;",5) == 0) { // KAKU Command ex. 10;Kaku;000041;1;ON
+           if (InputBuffer_Serial[14] != ';') return false;
+           
+           int group, inter;
+           byte command=0;
+           
+           if (strncasecmp(InputBuffer_Serial+12,"41",2) == 0) {
+            group=42;
+           } else if (strncasecmp(InputBuffer_Serial+12,"42",2) == 0) {
+            group=138;
+           } else if (strncasecmp(InputBuffer_Serial+12,"43",2) == 0) {
+            group=162;
+           } else if (strncasecmp(InputBuffer_Serial+12,"44",2) == 0) {
+            group=168;
+           } else return false;
+           
+           if (strncasecmp(InputBuffer_Serial+15,"1",1) == 0) {
+            inter=10;
+           } else if (strncasecmp(InputBuffer_Serial+15,"2",1) == 0) {
+            inter=34;
+           } else if (strncasecmp(InputBuffer_Serial+15,"3",1) == 0) {
+            inter=40;
+           } else return false;
+ 
+           group = group << 15;
+		         inter = inter << 9;
+		         int separator = 42;
+		         separator = separator << 3;
+		         long localCode = group + interruptor + separator;
+
+           if (str2cmd(InputBuffer_Serial+17)==VALUE_ON) {
+            localCode += 7;
+           } else {
+            localCode += 4;
+           }
+
+           RCS1_Send(localCode);
+           success=true;
+      }
+      return success;
+}
+#endif //PLUGIN_TX_404
