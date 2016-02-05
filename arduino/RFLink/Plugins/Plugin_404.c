@@ -112,4 +112,56 @@ boolean PluginTX_404(byte function, char *string) {
       }
       return success;
 }
+
+void RCS1_Send(unsigned long data) {
+    int fpulse   = 350;                             // Pulse width in microseconds
+    int fretrans = 10;                              // Number of code retransmissions
+
+    unsigned long bitstream = 0L;
+    // prepare data to send	
+    for (unsigned short i=0; i<10; i++) {           // reverse data bits
+		bitstream<<=1;
+		bitstream|=(data & B1);
+		data>>=1;
+    }
+
+    // Prepare transmit
+    digitalWrite(PIN_RF_RX_VCC,LOW);                // Turn off power to the RF receiver 
+    digitalWrite(PIN_RF_TX_VCC,HIGH);               // Enable the 433Mhz transmitter
+    delayMicroseconds(TRANSMITTER_STABLE_DELAY);    // short delay to let the transmitter become stable (Note: Aurel RTX MID needs 500µS/0,5ms)
+    // send bits
+    for (int nRepeat = 0; nRepeat <= fretrans; nRepeat++) {
+        	data=bitstream; 
+		for (unsigned short i=0; i<10; i++) {
+			switch (data & B1) {
+				case 0:
+					digitalWrite(PIN_RF_TX_DATA, HIGH);
+					delayMicroseconds(fpulse);
+					digitalWrite(PIN_RF_TX_DATA, LOW);
+					delayMicroseconds(fpulse*3);
+					break;
+				case 1:
+					digitalWrite(PIN_RF_TX_DATA, HIGH);
+					delayMicroseconds(fpulse*3);
+					digitalWrite(PIN_RF_TX_DATA, LOW);
+					delayMicroseconds(fpulse);
+					break;
+			}
+			//Next bit
+			data>>=1;
+		}
+        
+		//Send termination/synchronisation-signal. Total length: 26 periods
+		digitalWrite(PIN_RF_TX_DATA, HIGH);
+		delayMicroseconds(fpulse);
+		digitalWrite(PIN_RF_TX_DATA, LOW);
+		delayMicroseconds(fpulse*31);
+    }
+    // End transmit
+    delayMicroseconds(TRANSMITTER_STABLE_DELAY);    // short delay to let the transmitter become stable (Note: Aurel RTX MID needs 500µS/0,5ms)
+    digitalWrite(PIN_RF_TX_VCC,LOW);                // Turn thew 433Mhz transmitter off
+    digitalWrite(PIN_RF_RX_VCC,HIGH);               // Turn the 433Mhz receiver on
+    RFLinkHW();
+}
+
 #endif //PLUGIN_TX_404
