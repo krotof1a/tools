@@ -96,10 +96,10 @@ boolean PluginTX_404(byte function, char *string) {
            } else return false;
  
            group = group << 15;
-		         inter = inter << 9;
-		         int separator = 42;
-		         separator = separator << 3;
-		         long localCode = group + interruptor + separator;
+	   inter = inter << 9;
+	   int separator = 42;
+	   separator = separator << 3;
+	   long localCode = group + inter + separator;
 
            if (str2cmd(InputBuffer_Serial+17)==VALUE_ON) {
             localCode += 7;
