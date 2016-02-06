@@ -54,7 +54,7 @@ boolean Plugin_404(byte function, char *string) {
       Serial.print( pbuffer );
       int positive = ((bitstream) >> 1) & 1;
       int temperature = ((bitstream) >> 5) / 10;
-      if (positive == 0) temperature = temperature * -1;  // to be reworked
+      if (positive == 0) temperature = temperature | 0x8000;
       sprintf(pbuffer, "TEMP=%04x;", temperature);
       Serial.print( pbuffer );
       Serial.println();
@@ -74,7 +74,7 @@ boolean PluginTX_404(byte function, char *string) {
       if (strncasecmp(InputBuffer_Serial+3,"KAKU;",5) == 0) { // KAKU Command ex. 10;Kaku;000041;1;ON
            if (InputBuffer_Serial[14] != ';') return false;
            
-           int group, inter;
+           long group, inter;
            byte command=0;
            
            if (strncasecmp(InputBuffer_Serial+12,"41",2) == 0) {
@@ -119,7 +119,7 @@ void RCS1_Send(unsigned long data) {
 
     unsigned long bitstream = 0L;
     // prepare data to send	
-    for (unsigned short i=0; i<10; i++) {           // reverse data bits
+    for (unsigned short i=0; i<24; i++) {           // reverse data bits
 		bitstream<<=1;
 		bitstream|=(data & B1);
 		data>>=1;
@@ -131,8 +131,8 @@ void RCS1_Send(unsigned long data) {
     delayMicroseconds(TRANSMITTER_STABLE_DELAY);    // short delay to let the transmitter become stable (Note: Aurel RTX MID needs 500µS/0,5ms)
     // send bits
     for (int nRepeat = 0; nRepeat <= fretrans; nRepeat++) {
-        	data=bitstream; 
-		for (unsigned short i=0; i<10; i++) {
+		data=bitstream; 
+		for (unsigned short i=0; i<24; i++) {
 			switch (data & B1) {
 				case 0:
 					digitalWrite(PIN_RF_TX_DATA, HIGH);
