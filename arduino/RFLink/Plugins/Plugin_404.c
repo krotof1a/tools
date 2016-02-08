@@ -107,19 +107,19 @@ boolean PluginTX_404(byte function, char *string) {
             localCode += 4;
            }
 
-           RCS1_Send(localCode);
+           RCS1_Send(localCode, 24);
            success=true;
       }
       return success;
 }
 
-void RCS1_Send(unsigned long data) {
+void RCS1_Send(unsigned long data, int dataLength) {
     int fpulse   = 350;                             // Pulse width in microseconds
     int fretrans = 10;                              // Number of code retransmissions
 
     unsigned long bitstream = 0L;
     // prepare data to send	
-    for (unsigned short i=0; i<24; i++) {           // reverse data bits
+    for (unsigned short i=0; i<dataLength; i++) {           // reverse data bits
 		bitstream<<=1;
 		bitstream|=(data & B1);
 		data>>=1;
@@ -132,7 +132,7 @@ void RCS1_Send(unsigned long data) {
     // send bits
     for (int nRepeat = 0; nRepeat <= fretrans; nRepeat++) {
 		data=bitstream; 
-		for (unsigned short i=0; i<24; i++) {
+		for (unsigned short i=0; i<dataLength; i++) {
 			switch (data & B1) {
 				case 0:
 					digitalWrite(PIN_RF_TX_DATA, HIGH);
