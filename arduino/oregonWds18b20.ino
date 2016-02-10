@@ -1,5 +1,6 @@
 /*
  * Fausse sonde Oregon avec capteur ds18b20
+ * From http://easydomoticz.com/forum/viewtopic.php?f=7&t=240
  */
  
 #include <OneWire.h>
