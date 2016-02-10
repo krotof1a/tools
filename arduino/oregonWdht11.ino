@@ -6,9 +6,9 @@
 #include <dht11.h>
 
 //La sonde de température DHT11 est branchée au pin 7 de l'atmega
-#define TEMPERATURE_PIN 7
-#define TEMPERATURE_VCC 6
-#define TEMPERATURE_GND 8
+#define TEMPERATURE_PIN 2
+#define TEMPERATURE_VCC 3
+#define TEMPERATURE_GND 4
 
 //L'émetteur radio 433 mhz est branché au pin 11 de l'atmega
 #define TRANSMITTER_PIN 11
