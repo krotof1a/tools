@@ -1,5 +1,6 @@
 /*
  * Fausse sonde Oregon avec capteur dht11
+ * From http://easydomoticz.com/forum/viewtopic.php?f=7&t=240
  */
  
 #include <dht11.h>
