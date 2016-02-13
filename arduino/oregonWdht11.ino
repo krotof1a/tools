@@ -27,8 +27,8 @@ unsigned long TimerA = 0;
 const unsigned long TIME = 512;
 const unsigned long TWOTIME = TIME*2;
  
-#define SEND_HIGH() digitalWrite(TX_PIN, HIGH)
-#define SEND_LOW() digitalWrite(TX_PIN, LOW)
+#define SEND_HIGH() digitalWrite(TRANSMITTER_PIN, HIGH)
+#define SEND_LOW() digitalWrite(TRANSMITTER_PIN, LOW)
 
 byte OregonMessageBuffer[9];
  
@@ -272,11 +272,10 @@ void setup(void)
   digitalWrite(TRANSMITTER_GND,LOW);
   //On definis les logs à  9600 bauds
   Serial.begin(9600);
-  //On initialise le capteur de temperature
-  sensors.begin();
   //On initialise la fausse sonde Oregon
   SEND_LOW(); 
-  setType(OregonMessageBuffer, {0x1A,0x2D});
+  byte type[] = {0x1A,0x2D};
+  setType(OregonMessageBuffer, type);
   setChannel(OregonMessageBuffer, 0x20);
   setId(OregonMessageBuffer, 0xEE);
   setBatteryLevel(OregonMessageBuffer, 1);
