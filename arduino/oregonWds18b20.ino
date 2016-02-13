@@ -31,8 +31,8 @@ unsigned long TimerA = 0;
 const unsigned long TIME = 512;
 const unsigned long TWOTIME = TIME*2;
  
-#define SEND_HIGH() digitalWrite(TX_PIN, HIGH)
-#define SEND_LOW() digitalWrite(TX_PIN, LOW)
+#define SEND_HIGH() digitalWrite(TRANSMITTER_PIN, HIGH)
+#define SEND_LOW() digitalWrite(TRANSMITTER_PIN, LOW)
 
 byte OregonMessageBuffer[8];
  
@@ -269,7 +269,8 @@ void setup(void)
   sensors.begin();
   //On initialise la fausse sonde Oregon
   SEND_LOW(); 
-  setType(OregonMessageBuffer, {0xEA,0x4C});
+  byte type[] = {0xEA,0x4C};
+  setType(OregonMessageBuffer, type);
   setChannel(OregonMessageBuffer, 0x20);
   setId(OregonMessageBuffer, 0xCC);
   setBatteryLevel(OregonMessageBuffer, 1);
