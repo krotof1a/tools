@@ -66,7 +66,7 @@ boolean Plugin_404(byte function, char *string) {
 #endif // Plugin_404
 
 #ifdef PLUGIN_TX_404
-void RCS1_Send(unsigned long address);           // sends 0 and 1
+void RCS1_Send(unsigned long address, int dataLength);           // sends 0 and 1
 
 boolean PluginTX_404(byte function, char *string) {
       boolean success=false;
