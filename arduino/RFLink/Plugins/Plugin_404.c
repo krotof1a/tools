@@ -33,6 +33,10 @@ boolean Plugin_404(byte function, char *string) {
           bitstream=(bitstream<<1) | Bit;     
           i+=2;                                                    // Next 2 pulses
       } while(i<RawSignal.Number-2);                               //-2 to exclude the stopbit 
+      int positive = ((bitstream) >> 1) & 1;
+      int temperature = ((bitstream) >> 5) / 10;
+      if (temperature > 600) return false; // discard too high temp
+      if (positive == 0) temperature = temperature | 0x8000;
       //==================================================================================
       // Prevent repeating signals from showing up
       //==================================================================================
@@ -52,9 +56,6 @@ boolean Plugin_404(byte function, char *string) {
       Serial.print("TempCS;");                            // Label
       sprintf(pbuffer, "ID=%01x;",((bitstream) & 15) );   // ID   
       Serial.print( pbuffer );
-      int positive = ((bitstream) >> 1) & 1;
-      int temperature = ((bitstream) >> 5) / 10;
-      if (positive == 0) temperature = temperature | 0x8000;
       sprintf(pbuffer, "TEMP=%04x;", temperature);
       Serial.print( pbuffer );
       Serial.println();
