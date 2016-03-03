@@ -2,5 +2,6 @@
 eval last=\${$#}
 FILE=`echo $last |cut -c 3-200`
 
-export QUERY_STRING=1
-/home/pi/tools/nph-mjgrab > $FILE
+#export QUERY_STRING=1
+#/home/pi/tools/nph-mjgrab > $FILE
+fswebcam -v -S 1 -r 640x480 -d /dev/video0 -i 0 $FILE
