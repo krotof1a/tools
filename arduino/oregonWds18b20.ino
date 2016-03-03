@@ -1,40 +1,188 @@
 /*
- * Fausse sonde Oregon avec capteur ds18b20
- * From http://easydomoticz.com/forum/viewtopic.php?f=7&t=240
- */
- 
+ * connectingStuff, Oregon Scientific v2.1 Emitter
+ * http://connectingstuff.net/blog/encodage-protocoles-oregon-scientific-sur-arduino/
+ *
+ * Copyright (C) 2013 olivier.lebrun@gmail.com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+#include <avr/sleep.h>
+#include <avr/wdt.h>
+
+#ifndef cbi
+#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+#endif
+#ifndef sbi
+#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+#endif
+
+volatile boolean f_wdt = 1;
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
-
-//La sonde de température DS18B20 est branchée au pin 7 de l'atmega
 #define TEMPERATURE_PIN 7
-#define TEMPERATURE_VCC 6
-#define TEMPERATURE_GND 8
-
-//L'émetteur radio 433 mhz est branché au pin 11 de l'atmega
-#define TRANSMITTER_PIN 11
-#define TRANSMITTER_VCC 10
-#define TRANSMITTER_GND 9
-
-// On crée une instance de la classe oneWire pour communiquer avec le materiel on wire (dont le capteur ds18b20)
 OneWire oneWire(TEMPERATURE_PIN);
-//On passe la reference onewire à  la classe DallasTemperature qui vas nous permettre de relever la temperature simplement
 DallasTemperature sensors(&oneWire);
 
-// Ne pas utiliser de delay() pour ne pas rompre la reactivité de l'Arduino
-unsigned long TimerALimit = 30000UL; // Attente de 30s
-unsigned long TimerA = 0;
-
-/******************************************************************/
-/***********************  Oregon utilities    *********************/
-/******************************************************************/
+//#define THN132N
+ 
+const byte TX_PIN = 11;
+ 
 const unsigned long TIME = 512;
 const unsigned long TWOTIME = TIME*2;
  
-#define SEND_HIGH() digitalWrite(TRANSMITTER_PIN, HIGH)
-#define SEND_LOW() digitalWrite(TRANSMITTER_PIN, LOW)
-
-byte OregonMessageBuffer[8];
+#define SEND_HIGH() digitalWrite(TX_PIN, HIGH)
+#define SEND_LOW() digitalWrite(TX_PIN, LOW)
+ 
+// Buffer for Oregon message
+#ifdef THN132N
+  byte OregonMessageBuffer[8];
+#else
+  byte OregonMessageBuffer[9];
+#endif
+ 
+/**
+ * \brief    Send logical "0" over RF
+ * \details  azero bit be represented by an off-to-on transition
+ * \         of the RF signal at the middle of a clock period.
+ * \         Remenber, the Oregon v2.1 protocol add an inverted bit first 
+ */
+inline void sendZero(void) 
+{
+  SEND_HIGH();
+  delayMicroseconds(TIME);
+  SEND_LOW();
+  delayMicroseconds(TWOTIME);
+  SEND_HIGH();
+  delayMicroseconds(TIME);
+}
+ 
+/**
+ * \brief    Send logical "1" over RF
+ * \details  a one bit be represented by an on-to-off transition
+ * \         of the RF signal at the middle of a clock period.
+ * \         Remenber, the Oregon v2.1 protocol add an inverted bit first 
+ */
+inline void sendOne(void) 
+{
+   SEND_LOW();
+   delayMicroseconds(TIME);
+   SEND_HIGH();
+   delayMicroseconds(TWOTIME);
+   SEND_LOW();
+   delayMicroseconds(TIME);
+}
+ 
+/**
+* Send a bits quarter (4 bits = MSB from 8 bits value) over RF
+*
+* @param data Source data to process and sent
+*/
+ 
+/**
+ * \brief    Send a bits quarter (4 bits = MSB from 8 bits value) over RF
+ * \param    data   Data to send
+ */
+inline void sendQuarterMSB(const byte data) 
+{
+  (bitRead(data, 4)) ? sendOne() : sendZero();
+  (bitRead(data, 5)) ? sendOne() : sendZero();
+  (bitRead(data, 6)) ? sendOne() : sendZero();
+  (bitRead(data, 7)) ? sendOne() : sendZero();
+}
+ 
+/**
+ * \brief    Send a bits quarter (4 bits = LSB from 8 bits value) over RF
+ * \param    data   Data to send
+ */
+inline void sendQuarterLSB(const byte data) 
+{
+  (bitRead(data, 0)) ? sendOne() : sendZero();
+  (bitRead(data, 1)) ? sendOne() : sendZero();
+  (bitRead(data, 2)) ? sendOne() : sendZero();
+  (bitRead(data, 3)) ? sendOne() : sendZero();
+}
+ 
+/******************************************************************/
+/******************************************************************/
+/******************************************************************/
+ 
+/**
+ * \brief    Send a buffer over RF
+ * \param    data   Data to send
+ * \param    size   size of data to send
+ */
+void sendData(byte *data, byte size)
+{
+  for(byte i = 0; i < size; ++i)
+  {
+    sendQuarterLSB(data[i]);
+    sendQuarterMSB(data[i]);
+  }
+}
+ 
+/**
+ * \brief    Send an Oregon message
+ * \param    data   The Oregon message
+ */
+void sendOregon(byte *data, byte size)
+{
+    sendPreamble();
+    //sendSync();
+    sendData(data, size);
+    sendPostamble();
+}
+ 
+/**
+ * \brief    Send preamble
+ * \details  The preamble consists of 16 "1" bits
+ */
+inline void sendPreamble(void)
+{
+  byte PREAMBLE[]={0xFF,0xFF};
+  sendData(PREAMBLE, 2);
+}
+ 
+/**
+ * \brief    Send postamble
+ * \details  The postamble consists of 8 "0" bits
+ */
+inline void sendPostamble(void)
+{
+#ifdef THN132N
+  sendQuarterLSB(0x00);
+#else
+  byte POSTAMBLE[]={0x00};
+  sendData(POSTAMBLE, 1);  
+#endif
+}
+ 
+/**
+ * \brief    Send sync nibble
+ * \details  The sync is 0xA. It is not use in this version since the sync nibble
+ * \         is include in the Oregon message to send.
+ */
+inline void sendSync(void)
+{
+  sendQuarterLSB(0xA);
+}
+ 
+/******************************************************************/
+/******************************************************************/
+/******************************************************************/
  
 /**
  * \brief    Set the sensor type
@@ -110,7 +258,18 @@ void setTemperature(byte *data, float temp)
   // Set temperature float part
   data[4] |= (tempFloat << 4);
 }
-
+ 
+/**
+ * \brief    Set the sensor humidity
+ * \param    data       Oregon message
+ * \param    hum        the humidity
+ */
+void setHumidity(byte* data, byte hum)
+{
+    data[7] = (hum/10);
+    data[6] |= (hum - data[7]*10) << 4;
+}
+ 
 /**
  * \brief    Sum data for checksum
  * \param    count      number of bit to sum
@@ -138,165 +297,93 @@ int Sum(byte count, const byte* data)
  */
 void calculateAndSetChecksum(byte* data)
 {
+#ifdef THN132N
     int s = ((Sum(6, data) + (data[6]&0xF) - 0xa) & 0xff);
+ 
     data[6] |=  (s&0x0F) << 4;     data[7] =  (s&0xF0) >> 4;
+#else
+    data[8] = ((Sum(8, data) - 0xa) & 0xFF);
+#endif
 }
+ 
 
-/**
- * \brief    Send logical "0" over RF
- * \details  azero bit be represented by an off-to-on transition
- * \         of the RF signal at the middle of a clock period.
- * \         Remenber, the Oregon v2.1 protocol add an inverted bit first 
- */
-inline void sendZero(void) 
-{
-  SEND_HIGH();
-  delayMicroseconds(TIME);
-  SEND_LOW();
-  delayMicroseconds(TWOTIME);
-  SEND_HIGH();
-  delayMicroseconds(TIME);
-}
  
-/**
- * \brief    Send logical "1" over RF
- * \details  a one bit be represented by an on-to-off transition
- * \         of the RF signal at the middle of a clock period.
- * \         Remenber, the Oregon v2.1 protocol add an inverted bit first 
- */
-inline void sendOne(void) 
-{
-   SEND_LOW();
-   delayMicroseconds(TIME);
-   SEND_HIGH();
-   delayMicroseconds(TWOTIME);
-   SEND_LOW();
-   delayMicroseconds(TIME);
-}
- 
-/**
-* Send a bits quarter (4 bits = MSB from 8 bits value) over RF
-*
-* @param data Source data to process and sent
-*/
- 
-/**
- * \brief    Send a bits quarter (4 bits = MSB from 8 bits value) over RF
- * \param    data   Data to send
- */
-inline void sendQuarterMSB(const byte data) 
-{
-  (bitRead(data, 4)) ? sendOne() : sendZero();
-  (bitRead(data, 5)) ? sendOne() : sendZero();
-  (bitRead(data, 6)) ? sendOne() : sendZero();
-  (bitRead(data, 7)) ? sendOne() : sendZero();
-}
- 
-/**
- * \brief    Send a bits quarter (4 bits = LSB from 8 bits value) over RF
- * \param    data   Data to send
- */
-inline void sendQuarterLSB(const byte data) 
-{
-  (bitRead(data, 0)) ? sendOne() : sendZero();
-  (bitRead(data, 1)) ? sendOne() : sendZero();
-  (bitRead(data, 2)) ? sendOne() : sendZero();
-  (bitRead(data, 3)) ? sendOne() : sendZero();
-}
-
-/**
- * \brief    Send a buffer over RF
- * \param    data   Data to send
- * \param    size   size of data to send
- */
-void sendData(byte *data, byte size)
-{
-  for(byte i = 0; i < size; ++i)
-  {
-    sendQuarterLSB(data[i]);
-    sendQuarterMSB(data[i]);
-  }
-}
- 
-/**
- * \brief    Send an Oregon message
- * \param    data   The Oregon message
- */
-void sendOregon(byte *data, byte size)
-{
-    sendPreamble();
-    sendData(data, size);
-    sendPostamble();
-}
- 
-/**
- * \brief    Send preamble
- * \details  The preamble consists of 16 "1" bits
- */
-inline void sendPreamble(void)
-{
-  byte PREAMBLE[]={0xFF,0xFF};
-  sendData(PREAMBLE, 2);
-}
- 
-/**
- * \brief    Send postamble
- * \details  The postamble consists of 8 "0" bits
- */
-inline void sendPostamble(void)
-{
-  sendQuarterLSB(0x00);
-}
-
 /******************************************************************/
-/**************************** Main Part  **************************/
-
-//Fonction lancée à  l'initialisation du programme
-void setup(void)
+ 
+void setup()
 {
-  //Reglage des alim : Le bloc peu etre commenté/supprimé si vous alimentez vos composants autrement.
-  pinMode(TEMPERATURE_VCC, OUTPUT);
-  digitalWrite(TEMPERATURE_VCC,HIGH);
-  pinMode(TEMPERATURE_GND, OUTPUT);
-  digitalWrite(TEMPERATURE_GND,LOW);
-  pinMode(TRANSMITTER_VCC, OUTPUT);
-  digitalWrite(TRANSMITTER_VCC,HIGH);
-  pinMode(TRANSMITTER_GND, OUTPUT);
-  digitalWrite(TRANSMITTER_GND,LOW);
-  //On definis les logs à  9600 bauds
+
+  pinMode(10, OUTPUT);
+  digitalWrite(10,HIGH);
+  pinMode(9, OUTPUT);
+  digitalWrite(9,LOW);
+  pinMode(TX_PIN, OUTPUT);
+ 
   Serial.begin(9600);
-  //On initialise le capteur de temperature
   sensors.begin();
-  //On initialise la fausse sonde Oregon
+  Serial.println("\n[Oregon V2.1 encoder]");
+ 
   SEND_LOW(); 
-  byte type[] = {0xEA,0x4C};
-  setType(OregonMessageBuffer, type);
+ 
+  
+#ifdef THN132N  
+  // Create the Oregon message for a temperature only sensor (TNHN132N)
+  byte ID[] = {0xEA,0x4C};
+#else
+  // Create the Oregon message for a temperature/humidity sensor (THGR2228N)
+  byte ID[] = {0x1A,0x2D};
+#endif  
+ 
+  setType(OregonMessageBuffer, ID);
   setChannel(OregonMessageBuffer, 0x20);
   setId(OregonMessageBuffer, 0xCC);
-  setBatteryLevel(OregonMessageBuffer, 1);
-
 }
 
-//Fonction qui boucle à  l'infinis
-void loop(void)
+ 
+void loop()
 {
- // Partie gestion de temperature
- if (millis()-TimerA >= TimerALimit) {
-   //Lancement de la commande de récuperation de la temperature
-   sensors.requestTemperatures();
-   unsigned long readTemp = sensors.getTempCByIndex(0);
-   setTemperature(OregonMessageBuffer, readTemp);  
-   //Affichage de la temparature dans les logs
-   Serial.print("Temperature : ");Serial.print(readTemp);Serial.write(176);Serial.write('C');Serial.println();  
-   // Calcul du checksum
-   calculateAndSetChecksum(OregonMessageBuffer);
-   //Envoi
-   sendOregon(OregonMessageBuffer, sizeof(OregonMessageBuffer));
-   SEND_LOW();
-   delayMicroseconds(TWOTIME*8);
-   sendOregon(OregonMessageBuffer, sizeof(OregonMessageBuffer));
-   SEND_LOW();
-   //Reinit Timer
-   TimerA=millis();
- }
+  sensors.requestTemperatures();
+  float readTemp = sensors.getTempCByIndex(0);
+  int humidity = 0;
+  
+  Serial.print("Temperature : ");Serial.print(readTemp);Serial.write(176); // caractère °
+  Serial.write('C'); Serial.println();
+#ifndef THN132N
+  Serial.print("Humidity : ");Serial.print(humidity);
+  Serial.write('%'); Serial.println();
+#endif  
+
+  // (ie: 1wire DS18B20 for température, ...)
+  setBatteryLevel(OregonMessageBuffer, 1); // 0 : low, 1 : high
+  setTemperature(OregonMessageBuffer, readTemp);
+ 
+#ifndef THN132N
+  // Set Humidity
+  setHumidity(OregonMessageBuffer, humidity);
+#endif  
+ 
+  // Calculate the checksum
+  calculateAndSetChecksum(OregonMessageBuffer);
+ 
+  // Show the Oregon Message
+  for (byte i = 0; i < sizeof(OregonMessageBuffer); ++i)   {     
+    //TinySerial.print(OregonMessageBuffer[i] >> 4, HEX);
+    //TinySerial.print(OregonMessageBuffer[i] & 0x0F, HEX);
+  }
+ 
+  // Send the Message over RF
+  sendOregon(OregonMessageBuffer, sizeof(OregonMessageBuffer));
+  // Send a "pause"
+  SEND_LOW();
+  delayMicroseconds(TWOTIME*8);
+  // Send a copie of the first message. The v2.1 protocol send the
+  // message two time 
+  sendOregon(OregonMessageBuffer, sizeof(OregonMessageBuffer));
+ 
+  // Wait for 30 seconds before send a new message 
+  SEND_LOW();
+  //
+
+  delay(30000);
+  
 }
