@@ -1,5 +1,5 @@
-long allowedSender = 8217031;
-int allowedDevice = 5;
+long allowedSender = 1704097;
+int allowedDevice = 2;
 
 struct signal_t
 {
