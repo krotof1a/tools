@@ -10,10 +10,10 @@ then
 		sudo touch $RUN
 		echo "Starting alarm ..."
 		sleep 10
-		amixer cset numid=3 1
+		#amixer cset numid=3 1
 		while [ true ]
 		do
-	  		sudo aplay -D bluetooth /home/pi/tools/siren.wav > /dev/zero 2>&1
+	  		sudo aplay /home/pi/tools/siren.wav > /dev/zero 2>&1
 		done
 	fi
 else if [ "$1" = "init" ]
