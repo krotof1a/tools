@@ -15,7 +15,6 @@ fi
 
 date_serveur=$(curl -s "http://$ip:$port/json.htm?type=command&param=getSunRiseSet" | jq -r '.ServerTime | strptime("%Y-%m-%d %H:%M:%S") | mktime')
 /home/pi/build/433Utils/RPi_utils/codesend $date_serveur 1
-exit 0
 sleep 1
 
 mycmd=0
