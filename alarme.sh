@@ -13,7 +13,7 @@ then
 		#amixer cset numid=3 1
 		while [ true ]
 		do
-	  		aplay /home/chip/tools-domo/siren.wav > /dev/zero 2>&1
+	  		aplay /home/pi/tools-domo/siren.wav > /dev/zero 2>&1
 		done
 	fi
 else if [ "$1" = "init" ]
