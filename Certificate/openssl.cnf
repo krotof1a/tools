@@ -227,6 +227,7 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 
 [ alt_names ]
+#DNS.1=ollioules.hopto.org
 IP.1 = 89.89.71.76
 
 
