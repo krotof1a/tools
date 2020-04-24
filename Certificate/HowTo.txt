@@ -1,0 +1,17 @@
+#Create CA Certificate (only once)
+openssl genrsa -aes256 -out ca.key.pem 2048
+openssl req -new -x509 -subj "/CN=Krotof1A" -extensions v3_ca -days 3650 -key ca.key.pem -sha256 -out ca.pem -config openssl.cnf
+
+#Create Server certificate
+openssl genrsa -out server.key.pem 2048
+openssl req -subj "/CN=89.89.71.76" -extensions v3_req -sha256 -new -key server.key.pem -out server.csr
+openssl x509 -req -extensions v3_req -days 3650 -sha256 -in server.csr -CA ca.pem -CAkey ca.key.pem -CAcreateserial -out server.crt -extfile openssl.cnf
+
+#Check
+openssl x509 -in server.crt -text -noout
+
+#Cat all for Domoticz
+cat server.key.pem server.crt dhparam.pem > server_cert.pem
+
+#Chrome/Edge browser config
+#Import ca.pem as Root Certificate Authority
