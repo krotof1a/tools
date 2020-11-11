@@ -1,0 +1,5 @@
+#!/bin/sh
+
+ffmpeg -loglevel quiet -rtsp_transport tcp -y -i rtsp://admin:6bwfkwqd@192.168.1.88:10554/tcp/av0_0 -vframes 1 ${8#-o}
+
+exit 0
