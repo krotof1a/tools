@@ -4,7 +4,7 @@ openssl req -new -x509 -subj "/CN=Krotof1A" -extensions v3_ca -days 3650 -key ca
 
 #Create Server certificate
 openssl genrsa -out server.key.pem 2048
-openssl req -subj "/CN=89.89.71.76" -extensions v3_req -sha256 -new -key server.key.pem -out server.csr
+openssl req -subj "/CN=176.128.87.222" -extensions v3_req -sha256 -new -key server.key.pem -out server.csr
 openssl x509 -req -extensions v3_req -days 3650 -sha256 -in server.csr -CA ca.pem -CAkey ca.key.pem -CAcreateserial -out server.crt -extfile openssl.cnf
 
 #Check
